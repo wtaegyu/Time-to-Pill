@@ -2,7 +2,9 @@ package com.timetopill.service;
 
 import com.timetopill.dto.AuthDto.*;
 import com.timetopill.entity.User;
+import com.timetopill.entity.User.AuthProvider;
 import com.timetopill.repository.UserRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -11,9 +13,11 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuthService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public AuthService(UserRepository userRepository) {
+    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Transactional
@@ -28,9 +32,10 @@ public class AuthService {
 
         User user = new User();
         user.setUsername(request.username());
-        user.setPassword(request.password()); // TODO: Add password encryption
+        user.setPassword(passwordEncoder.encode(request.password()));
         user.setNickname(request.nickname());
         user.setAge(request.age());
+        user.setProvider(AuthProvider.LOCAL);
         if (request.gender() != null) {
             user.setGender(User.Gender.valueOf(request.gender()));
         }
@@ -47,8 +52,13 @@ public class AuthService {
         User user = userRepository.findByUsername(request.username())
             .orElseThrow(() -> new IllegalArgumentException("Invalid username or password"));
 
-        // TODO: Add password verification with encryption
-        if (!user.getPassword().equals(request.password())) {
+        // Block OAuth users from password login
+        if (user.getProvider() != AuthProvider.LOCAL) {
+            throw new IllegalArgumentException("Please use " + user.getProvider() + " login");
+        }
+
+        // Verify password with BCrypt
+        if (!passwordEncoder.matches(request.password(), user.getPassword())) {
             throw new IllegalArgumentException("Invalid username or password");
         }
 
@@ -61,6 +71,10 @@ public class AuthService {
     public NicknameCheckResponse checkNickname(String nickname) {
         boolean available = !userRepository.existsByNickname(nickname);
         return new NicknameCheckResponse(available);
+    }
+
+    public boolean isUsernameTaken(String username) {
+        return userRepository.existsByUsername(username);
     }
 
     public User getUserById(Long userId) {
