@@ -17,7 +17,7 @@ public class User {
     @Column(nullable = false, unique = true, length = 50)
     private String username;
 
-    @Column(nullable = false)
+    @Column // nullable for OAuth users
     private String password;
 
     @Column(nullable = false, unique = true, length = 50)
@@ -28,6 +28,14 @@ public class User {
     @Enumerated(EnumType.STRING)
     @Column(length = 1)
     private Gender gender;
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 10)
+    private AuthProvider provider = AuthProvider.LOCAL;
+
+    public enum AuthProvider {
+        LOCAL, GOOGLE
+    }
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -74,6 +82,9 @@ public class User {
 
     public Gender getGender() { return gender; }
     public void setGender(Gender gender) { this.gender = gender; }
+
+    public AuthProvider getProvider() { return provider; }
+    public void setProvider(AuthProvider provider) { this.provider = provider; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }

@@ -16,11 +16,12 @@ USE timetopill;
 | Column | Type | Constraints | Description |
 |--------|------|-------------|-------------|
 | id | BIGINT | PK, AUTO_INCREMENT | Primary key |
-| username | VARCHAR(50) | UNIQUE, NOT NULL | Login ID |
-| password | VARCHAR(255) | NOT NULL | Password (hashed) |
+| username | VARCHAR(50) | UNIQUE, NOT NULL | Login ID (or email for OAuth) |
+| password | VARCHAR(255) | | Password (hashed, NULL for OAuth) |
 | nickname | VARCHAR(50) | UNIQUE, NOT NULL | Display name |
 | age | INT | | User age |
 | gender | ENUM('M','F') | | Gender |
+| provider | VARCHAR(10) | DEFAULT 'LOCAL' | Auth provider (LOCAL, GOOGLE) |
 | created_at | TIMESTAMP | | Created timestamp |
 | updated_at | TIMESTAMP | | Updated timestamp |
 
