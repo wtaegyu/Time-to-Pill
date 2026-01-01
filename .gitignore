@@ -1,0 +1,37 @@
+# IDE
+.idea/
+.vscode/
+.claude/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment variables
+.env
+.env.local
+
+# Node.js
+node_modules/
+npm-debug.log
+
+# Gradle
+.gradle/
+build/
+bin/
+
+# Android
+app/android/.gradle/
+app/android/app/build/
+app/android/build/
+*.apk
+*.keystore
+!app/android/app/debug.keystore
+
+# Expo
+app/.expo/
+
+# Logs
+*.log
+*.tmp

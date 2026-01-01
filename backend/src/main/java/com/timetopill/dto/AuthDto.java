@@ -1,0 +1,51 @@
+package com.timetopill.dto;
+
+import com.timetopill.entity.User;
+
+public class AuthDto {
+
+    // 로그인 요청
+    public record LoginRequest(
+        String username,
+        String password
+    ) {}
+
+    // 회원가입 요청
+    public record RegisterRequest(
+        String username,
+        String password,
+        String nickname,
+        Integer age,
+        String gender
+    ) {}
+
+    // 인증 응답
+    public record AuthResponse(
+        String token,
+        UserDto user
+    ) {}
+
+    // 닉네임 중복 확인 응답
+    public record NicknameCheckResponse(
+        boolean available
+    ) {}
+
+    // 사용자 정보 DTO
+    public record UserDto(
+        Long id,
+        String username,
+        String nickname,
+        Integer age,
+        String gender
+    ) {
+        public static UserDto from(User user) {
+            return new UserDto(
+                user.getId(),
+                user.getUsername(),
+                user.getNickname(),
+                user.getAge(),
+                user.getGender() != null ? user.getGender().name() : null
+            );
+        }
+    }
+}
