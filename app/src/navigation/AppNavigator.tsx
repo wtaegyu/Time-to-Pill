@@ -8,6 +8,11 @@ import {
   HomeScreen,
   SearchScreen,
   MyPageScreen,
+  NotificationSettingsScreen,
+  ChangePasswordScreen,
+  StatisticsScreen,
+  HelpScreen,
+  AppInfoScreen,
 } from '../screens';
 
 export type RootStackParamList = {
@@ -18,6 +23,11 @@ export type RootStackParamList = {
   MyPage: undefined;
   PillDetail: { pill: any };
   AddPill: undefined;
+  NotificationSettings: undefined;
+  ChangePassword: undefined;
+  Statistics: undefined;
+  Help: undefined;
+  AppInfo: undefined;
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -34,7 +44,6 @@ export default function AppNavigator() {
     setIsLoggedIn(loggedIn);
   };
 
-  // 로딩 중
   if (isLoggedIn === null) {
     return null;
   }
@@ -55,6 +64,13 @@ export default function AppNavigator() {
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="Search" component={SearchScreen} />
         <Stack.Screen name="MyPage" component={MyPageScreen} />
+
+        {/* Settings Screens */}
+        <Stack.Screen name="NotificationSettings" component={NotificationSettingsScreen} />
+        <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
+        <Stack.Screen name="Statistics" component={StatisticsScreen} />
+        <Stack.Screen name="Help" component={HelpScreen} />
+        <Stack.Screen name="AppInfo" component={AppInfoScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
