@@ -81,4 +81,47 @@ public class AuthService {
         return userRepository.findById(userId)
             .orElseThrow(() -> new IllegalArgumentException("User not found"));
     }
+
+    @Transactional
+    public AuthResponse googleLogin(GoogleLoginRequest request) {
+        // Check if user already exists
+        var existingUser = userRepository.findByUsername(request.email());
+
+        User user;
+        if (existingUser.isPresent()) {
+            user = existingUser.get();
+            // Verify it's a Google account
+            if (user.getProvider() != AuthProvider.GOOGLE) {
+                throw new IllegalArgumentException("This email is registered with password login");
+            }
+        } else {
+            // Create new Google user
+            user = new User();
+            user.setUsername(request.email());
+            user.setNickname(generateUniqueNickname(request.name(), request.email()));
+            user.setProvider(AuthProvider.GOOGLE);
+            user = userRepository.save(user);
+        }
+
+        // TODO: Implement JWT token generation
+        String token = "google-token-" + user.getId();
+
+        return new AuthResponse(token, UserDto.from(user));
+    }
+
+    private String generateUniqueNickname(String name, String email) {
+        String baseNickname = (name != null && !name.isEmpty())
+                ? name
+                : email.split("@")[0];
+
+        String nickname = baseNickname;
+        int suffix = 1;
+
+        while (userRepository.findByNickname(nickname).isPresent()) {
+            nickname = baseNickname + suffix;
+            suffix++;
+        }
+
+        return nickname;
+    }
 }
