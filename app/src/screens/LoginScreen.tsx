@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,13 @@ import {
   Alert,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import * as Google from 'expo-auth-session/providers/google';
+import * as WebBrowser from 'expo-web-browser';
 import { authService } from '../services/authService';
+import api from '../services/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+WebBrowser.maybeCompleteAuthSession();
 
 type Props = {
   navigation: NativeStackNavigationProp<any>;
@@ -18,6 +24,53 @@ export default function LoginScreen({ navigation }: Props) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Google OAuth setup
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    androidClientId: 'YOUR_ANDROID_CLIENT_ID.apps.googleusercontent.com',
+    webClientId: 'YOUR_WEB_CLIENT_ID.apps.googleusercontent.com',
+  });
+
+  useEffect(() => {
+    handleGoogleResponse();
+  }, [response]);
+
+  const handleGoogleResponse = async () => {
+    if (response?.type === 'success') {
+      const { authentication } = response;
+      if (authentication?.accessToken) {
+        await handleGoogleLogin(authentication.accessToken);
+      }
+    }
+  };
+
+  const handleGoogleLogin = async (accessToken: string) => {
+    setLoading(true);
+    try {
+      // Get user info from Google
+      const userInfoResponse = await fetch(
+        'https://www.googleapis.com/userinfo/v2/me',
+        { headers: { Authorization: `Bearer ${accessToken}` } }
+      );
+      const userInfo = await userInfoResponse.json();
+
+      // Send to backend
+      const res = await api.post('/auth/google', {
+        email: userInfo.email,
+        name: userInfo.name,
+        googleId: userInfo.id,
+      });
+
+      await AsyncStorage.setItem('token', res.data.token);
+      await AsyncStorage.setItem('user', JSON.stringify(res.data.user));
+
+      navigation.replace('Home');
+    } catch (error) {
+      Alert.alert('Google 로그인 실패', '다시 시도해주세요.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleLogin = async () => {
     if (!username || !password) {
@@ -72,6 +125,20 @@ export default function LoginScreen({ navigation }: Props) {
           onPress={() => navigation.navigate('Register')}
         >
           <Text style={styles.linkText}>회원가입</Text>
+        </TouchableOpacity>
+
+        <View style={styles.divider}>
+          <View style={styles.dividerLine} />
+          <Text style={styles.dividerText}>또는</Text>
+          <View style={styles.dividerLine} />
+        </View>
+
+        <TouchableOpacity
+          style={[styles.googleButton, !request && styles.buttonDisabled]}
+          onPress={() => promptAsync()}
+          disabled={!request || loading}
+        >
+          <Text style={styles.googleButtonText}>Google로 로그인</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -130,5 +197,34 @@ const styles = StyleSheet.create({
   linkText: {
     color: '#4e7cff',
     fontSize: 14,
+  },
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 24,
+    marginBottom: 8,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#cfd6e4',
+  },
+  dividerText: {
+    marginHorizontal: 16,
+    color: '#7a7a7a',
+    fontSize: 14,
+  },
+  googleButton: {
+    backgroundColor: '#fff',
+    padding: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#cfd6e4',
+  },
+  googleButtonText: {
+    color: '#1f1f1f',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

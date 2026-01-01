@@ -74,6 +74,12 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/google")
+    public ResponseEntity<AuthResponse> googleLogin(@RequestBody GoogleLoginRequest request) {
+        AuthResponse response = authService.googleLogin(request);
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/check-nickname")
     public ResponseEntity<NicknameCheckResponse> checkNickname(@RequestParam String nickname) {
         NicknameCheckResponse response = authService.checkNickname(nickname);

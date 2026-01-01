@@ -30,6 +30,13 @@ public class AuthDto {
         boolean available
     ) {}
 
+    // Google 로그인 요청
+    public record GoogleLoginRequest(
+        String email,
+        String name,
+        String googleId
+    ) {}
+
     // 사용자 정보 DTO
     public record UserDto(
         Long id,
