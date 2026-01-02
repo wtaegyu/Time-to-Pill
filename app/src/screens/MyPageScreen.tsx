@@ -8,6 +8,7 @@ import {
   Alert,
   StatusBar,
 } from 'react-native';
+import { useIsFocused } from '@react-navigation/native'; // [추가] 화면 포커스 감지
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { authService } from '../services/authService';
 import { pillService } from '../services/pillService';
@@ -20,21 +21,20 @@ type Props = {
 export default function MyPageScreen({ navigation }: Props) {
   const [user, setUser] = useState<User | null>(null);
   const [myPills, setMyPills] = useState<Pill[]>([]);
+  const isFocused = useIsFocused(); // [추가] 약을 추가하고 돌아왔을 때 새로고침하기 위함
 
   useEffect(() => {
-    loadUserData();
-    loadMyPills();
-  }, []);
+    if (isFocused) {
+      loadUserData();
+      loadMyPills();
+    }
+  }, [isFocused]);
 
   const loadUserData = async () => {
     const userData = await authService.getCurrentUser();
-    setUser(userData || {
-      id: 1,
-      username: 'testuser',
-      nickname: '테스트유저',
-      age: 25,
-      gender: 'M',
-    });
+    if (userData) {
+      setUser(userData);
+    }
   };
 
   const loadMyPills = async () => {
@@ -42,10 +42,9 @@ export default function MyPageScreen({ navigation }: Props) {
       const pills = await pillService.getMyPills();
       setMyPills(pills);
     } catch (error) {
-      setMyPills([
-        { id: 1, name: '타이레놀', description: '해열진통제', dosage: '1정', warnings: [] },
-        { id: 2, name: '게보린', description: '두통약', dosage: '1정', warnings: [] },
-      ]);
+      console.error("내 약 목록 불러오기 실패:", error);
+      // 에러 시 빈 목록 처리
+      setMyPills([]);
     }
   };
 
@@ -64,23 +63,31 @@ export default function MyPageScreen({ navigation }: Props) {
   };
 
   const handleRemovePill = async (pill: Pill) => {
-    Alert.alert('약 삭제', `${pill.name}을(를) 삭제하시겠습니까?`, [
+    // [수정] itemName 또는 name 중 있는 것 사용
+    const displayName = pill.itemName || pill.name;
+    // [중요] 삭제에 사용할 ID는 itemSeq
+    const idToRemove = pill.itemSeq || (pill as any).id?.toString();
+
+    Alert.alert('약 삭제', `${displayName}을(를) 삭제하시겠습니까?`, [
       { text: '취소', style: 'cancel' },
       {
         text: '삭제',
         style: 'destructive',
         onPress: async () => {
           try {
-            await pillService.removePill(pill.id);
-            loadMyPills();
+            if (!idToRemove) throw new Error("ID 없음");
+            await pillService.removePill(idToRemove);
+            Alert.alert("성공", "삭제되었습니다.");
+            loadMyPills(); // 삭제 후 목록 새로고침
           } catch (error) {
-            setMyPills((prev) => prev.filter((p) => p.id !== pill.id));
+            Alert.alert("오류", "삭제에 실패했습니다.");
           }
         },
       },
     ]);
   };
 
+  // ... menuItems 설정은 동일 ...
   const menuItems = [
     { label: '알림 설정', onPress: () => navigation.navigate('NotificationSettings') },
     { label: '비밀번호 변경', onPress: () => navigation.navigate('ChangePassword') },
@@ -95,10 +102,7 @@ export default function MyPageScreen({ navigation }: Props) {
 
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Text style={styles.backIcon}>←</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>마이페이지</Text>
@@ -111,7 +115,7 @@ export default function MyPageScreen({ navigation }: Props) {
           <View style={styles.avatarContainer}>
             <View style={styles.avatar}>
               <Text style={styles.avatarText}>
-                {user?.nickname?.charAt(0) || '?'}
+                {user?.nickname?.charAt(0) || user?.username?.charAt(0) || '?'}
               </Text>
             </View>
             <View style={styles.profileInfo}>
@@ -119,6 +123,7 @@ export default function MyPageScreen({ navigation }: Props) {
               <Text style={styles.username}>@{user?.username}</Text>
             </View>
           </View>
+          {/* ... statsRow 생략 (기존과 동일) ... */}
           <View style={styles.statsRow}>
             <View style={styles.statItem}>
               <Text style={styles.statValue}>{myPills.length}</Text>
@@ -156,11 +161,14 @@ export default function MyPageScreen({ navigation }: Props) {
             </View>
           ) : (
             myPills.map((pill) => (
-              <View key={pill.id} style={styles.pillItem}>
+              <View key={pill.itemSeq || pill.id} style={styles.pillItem}>
                 <View style={styles.pillDot} />
                 <View style={styles.pillInfo}>
-                  <Text style={styles.pillName}>{pill.name}</Text>
-                  <Text style={styles.pillDesc}>{pill.dosage} · {pill.description}</Text>
+                  {/* [수정] 백엔드 필드명 itemName 사용 */}
+                  <Text style={styles.pillName}>{pill.itemName || pill.name}</Text>
+                  <Text style={styles.pillDesc} numberOfLines={1}>
+                    {pill.entpName} · {pill.efficacy || pill.description}
+                  </Text>
                 </View>
                 <TouchableOpacity
                   style={styles.pillRemove}
@@ -173,16 +181,13 @@ export default function MyPageScreen({ navigation }: Props) {
           )}
         </View>
 
-        {/* Menu Section */}
+        {/* ... Menu Section 및 Logout 버튼 기존과 동일 ... */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>설정</Text>
           {menuItems.map((item, index) => (
             <TouchableOpacity
               key={index}
-              style={[
-                styles.menuItem,
-                index === menuItems.length - 1 && styles.menuItemLast,
-              ]}
+              style={[styles.menuItem, index === menuItems.length - 1 && styles.menuItemLast]}
               onPress={item.onPress}
             >
               <Text style={styles.menuLabel}>{item.label}</Text>
@@ -191,16 +196,15 @@ export default function MyPageScreen({ navigation }: Props) {
           ))}
         </View>
 
-        {/* Logout Button */}
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Text style={styles.logoutText}>로그아웃</Text>
         </TouchableOpacity>
-
         <View style={{ height: 40 }} />
       </ScrollView>
     </View>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {
