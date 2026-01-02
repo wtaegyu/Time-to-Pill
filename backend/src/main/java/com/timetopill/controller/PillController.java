@@ -1,64 +1,43 @@
 package com.timetopill.controller;
 
-import com.timetopill.dto.PillDto.*;
-import com.timetopill.entity.User;
-import com.timetopill.service.AuthService;
-import com.timetopill.service.PillService;
-import org.springframework.http.ResponseEntity;
+import com.timetopill.dto.DrugSearchDto;
+import com.timetopill.service.PillService; // [중요] PillService import
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/pills")
+@RequiredArgsConstructor
 public class PillController {
 
-    private final PillService pillService;
-    private final AuthService authService;
+    private final PillService pillService; // [변경] UserPillService -> PillService
 
-    public PillController(PillService pillService, AuthService authService) {
-        this.pillService = pillService;
-        this.authService = authService;
-    }
-
-    @GetMapping("/search")
-    public ResponseEntity<List<PillResponse>> searchByName(@RequestParam String name) {
-        List<PillResponse> pills = pillService.searchByName(name);
-        return ResponseEntity.ok(pills);
-    }
-
-    @GetMapping("/search/symptom")
-    public ResponseEntity<List<PillResponse>> searchBySymptom(@RequestParam String symptom) {
-        List<PillResponse> pills = pillService.searchBySymptom(symptom);
-        return ResponseEntity.ok(pills);
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<PillResponse> getPillDetail(@PathVariable Long id) {
-        PillResponse pill = pillService.getPillDetail(id);
-        return ResponseEntity.ok(pill);
-    }
-
-    // TODO: JWT 토큰에서 userId 추출하는 로직 필요
+    // 1. 내 약통 조회
     @GetMapping("/my")
-    public ResponseEntity<List<PillResponse>> getMyPills(@RequestHeader("X-User-Id") Long userId) {
-        List<PillResponse> pills = pillService.getMyPills(userId);
-        return ResponseEntity.ok(pills);
+    public List<DrugSearchDto> getMyPills(@AuthenticationPrincipal UserDetails userDetails) {
+        Long userId = Long.parseLong(userDetails.getUsername());
+        return pillService.getMyPills(userId);
     }
 
-    @PostMapping("/my/{pillId}")
-    public ResponseEntity<Void> addPill(
-            @RequestHeader("X-User-Id") Long userId,
-            @PathVariable Long pillId) {
-        User user = authService.getUserById(userId);
-        pillService.addPillToUser(userId, pillId, user);
-        return ResponseEntity.ok().build();
+    // 2. 내 약통에 추가
+    @PostMapping("/my/{itemSeq}")
+    public String addMyPill(@AuthenticationPrincipal UserDetails userDetails,
+                            @PathVariable("itemSeq") String itemSeq) {
+        Long userId = Long.parseLong(userDetails.getUsername());
+        pillService.addPill(userId, itemSeq);
+        return "약통에 추가되었습니다.";
     }
 
-    @DeleteMapping("/my/{pillId}")
-    public ResponseEntity<Void> removePill(
-            @RequestHeader("X-User-Id") Long userId,
-            @PathVariable Long pillId) {
-        pillService.removePillFromUser(userId, pillId);
-        return ResponseEntity.ok().build();
+    // 3. 내 약통에서 삭제
+    @DeleteMapping("/my/{itemSeq}")
+    public String deleteMyPill(@AuthenticationPrincipal UserDetails userDetails,
+                               @PathVariable("itemSeq") String itemSeq) {
+        Long userId = Long.parseLong(userDetails.getUsername());
+        pillService.deletePill(userId, itemSeq);
+        return "약통에서 삭제되었습니다.";
     }
 }

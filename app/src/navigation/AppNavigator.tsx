@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { authService } from '../services/authService';
+
+// [중요] 화면 파일들 가져오기
 import {
   LoginScreen,
   RegisterScreen,
@@ -14,6 +16,10 @@ import {
   HelpScreen,
   AppInfoScreen,
 } from '../screens';
+
+// [중요] 새로 만든 약 상세 화면 가져오기
+// 만약 빨간줄이 뜬다면 src/screens 폴더 안에 PillDetailScreen.tsx 파일이 있는지 꼭 확인하세요!
+import PillDetailScreen from '../screens/PillDetailScreen';
 
 export type RootStackParamList = {
   Login: undefined;
@@ -65,12 +71,16 @@ export default function AppNavigator() {
         <Stack.Screen name="Search" component={SearchScreen} />
         <Stack.Screen name="MyPage" component={MyPageScreen} />
 
+        {/* [중요] 여기에 오타가 있었을 확률이 높습니다. 끝에 /> 를 꼭 확인하세요! */}
+        <Stack.Screen name="PillDetail" component={PillDetailScreen} />
+
         {/* Settings Screens */}
         <Stack.Screen name="NotificationSettings" component={NotificationSettingsScreen} />
         <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
         <Stack.Screen name="Statistics" component={StatisticsScreen} />
         <Stack.Screen name="Help" component={HelpScreen} />
         <Stack.Screen name="AppInfo" component={AppInfoScreen} />
+
       </Stack.Navigator>
     </NavigationContainer>
   );

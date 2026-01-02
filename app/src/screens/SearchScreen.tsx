@@ -34,51 +34,44 @@ export default function SearchScreen({ navigation }: Props) {
       return;
     }
 
-    Keyboard.dismiss();
-    setLoading(true);
-    setSearched(true);
-    try {
-      const data = await pillService.searchByName(searchQuery);
-      setResults(data);
-    } catch (error) {
-      setResults([
-        {
-          id: 1,
-          name: '타이레놀 500mg',
-          description: '해열진통제',
-          dosage: '1정',
-          warnings: [],
-        },
-        {
-          id: 2,
-          name: '게보린',
-          description: '두통, 치통, 생리통 등',
-          dosage: '1정',
-          warnings: [{ type: 'drowsiness', message: '졸음 유발' }],
-        },
-      ]);
-    } finally {
-      setLoading(false);
-    }
+    performSearch(searchQuery, false);
   };
 
   const handleTagSearch = async (tag: string) => {
     setSearchQuery(tag);
+    performSearch(tag, true);
+  };
+
+  // 검색 로직 통합 (이름 검색 vs 증상 검색 자동 분기)
+  const performSearch = async (query: string, isTag: boolean) => {
     Keyboard.dismiss();
     setLoading(true);
     setSearched(true);
+
     try {
-      const data = await pillService.searchBySymptom(tag);
+      let data;
+      // 태그(증상) 클릭이면 증상 검색, 아니면 이름 검색
+      if (isTag) {
+        data = await pillService.searchBySymptom(query);
+      } else {
+        data = await pillService.searchByName(query);
+      }
       setResults(data);
     } catch (error) {
+      console.error(error);
+      // 에러 시 더미 데이터도 String ID(itemSeq) 구조로 변경
       setResults([
         {
-          id: 1,
-          name: '타이레놀 500mg',
+          itemSeq: '199303108', // 문자열 ID
+          name: '타이레놀정500밀리그람',
+          itemName: '타이레놀정500밀리그람', // 백엔드 필드명
+          entpName: '(주)한국얀센',
           description: '해열진통제',
-          dosage: '1정',
+          efficacy: '해열 및 진통',
+          dosage: '1회 1~2정',
+          useMethod: '1회 1~2정씩 1일 3~4회',
           warnings: [],
-        },
+        } as any, // 타입 에러 방지용 casting
       ]);
     } finally {
       setLoading(false);
@@ -87,10 +80,20 @@ export default function SearchScreen({ navigation }: Props) {
 
   const handleAddPill = async (pill: Pill) => {
     try {
-      await pillService.addPill(pill.id);
-      Alert.alert('추가 완료', `${pill.name}이(가) 내 약 목록에 추가되었습니다.`);
+      // [중요] id(숫자) 대신 itemSeq(문자열) 사용
+      // pill.itemSeq가 없으면 기존 id를 문자열로 변환해서 보냄
+      const idToSend = pill.itemSeq || pill.id?.toString();
+
+      if (!idToSend) {
+        Alert.alert('오류', '약 정보를 찾을 수 없습니다.');
+        return;
+      }
+
+      await pillService.addPill(idToSend);
+      Alert.alert('추가 완료', `${pill.itemName || pill.name}이(가) 내 약 목록에 추가되었습니다.`);
     } catch (error) {
-      Alert.alert('추가 완료', `${pill.name}이(가) 내 약 목록에 추가되었습니다.`);
+      // 이미 추가된 경우 등 에러 처리
+      Alert.alert('알림', '이미 추가되었거나 통신 오류가 발생했습니다.');
     }
   };
 
@@ -100,32 +103,46 @@ export default function SearchScreen({ navigation }: Props) {
     setSearched(false);
   };
 
-  const renderResultItem = ({ item }: { item: Pill }) => (
-    <TouchableOpacity
-      style={styles.resultCard}
-      onPress={() => navigation.navigate('PillDetail', { pill: item })}
-      activeOpacity={0.7}
-    >
+ const renderResultItem = ({ item }: { item: Pill }) => (
+   <TouchableOpacity
+     style={styles.resultCard}
+     onPress={() => navigation.navigate('PillDetail', { pill: item })}
+     activeOpacity={0.7}
+   >
       <View style={styles.pillIconContainer}>
         <View style={styles.pillDot} />
       </View>
       <View style={styles.resultInfo}>
-        <Text style={styles.resultName}>{item.name}</Text>
-        <Text style={styles.resultDesc}>{item.description}</Text>
+        {/* 백엔드 필드명(itemName) 우선, 없으면 기존 name 사용 */}
+        <Text style={styles.resultName}>{item.itemName || item.name}</Text>
+
+        {/* 업체명 표시 (새로 추가) */}
+        {item.entpName && (
+           <Text style={styles.companyName}>{item.entpName}</Text>
+        )}
+
+        {/* 효능 표시: efficacy 우선, 없으면 description */}
+        <Text style={styles.resultDesc} numberOfLines={2}>
+            {item.efficacy || item.description || "정보 없음"}
+        </Text>
+
         {item.warnings && item.warnings.length > 0 && (
           <View style={styles.warningBadge}>
-            <Text style={styles.warningText}>{item.warnings[0].message}</Text>
+            <Text style={styles.warningText}>주의사항 있음</Text>
           </View>
         )}
       </View>
       <TouchableOpacity
-        style={styles.addButton}
-        onPress={() => handleAddPill(item)}
-      >
-        <Text style={styles.addButtonText}>+</Text>
-      </TouchableOpacity>
-    </TouchableOpacity>
-  );
+            style={styles.addButton}
+            onPress={(e) => {
+              e.stopPropagation(); // [추가] 카드 클릭 이벤트가 실행되지 않도록 차단
+              handleAddPill(item);
+            }}
+          >
+            <Text style={styles.addButtonText}>+</Text>
+          </TouchableOpacity>
+        </TouchableOpacity>
+   );
 
   return (
     <View style={styles.container}>
@@ -170,7 +187,7 @@ export default function SearchScreen({ navigation }: Props) {
       {loading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#1e293b" />
-          <Text style={styles.loadingText}>검색 중...</Text>
+          <Text style={styles.loadingText}>약 정보를 찾아보고 있어요...</Text>
         </View>
       ) : !searched ? (
         /* Initial State - Show Tags */
@@ -200,7 +217,11 @@ export default function SearchScreen({ navigation }: Props) {
                     styles.popularItem,
                     index === POPULAR_PILLS.length - 1 && styles.popularItemLast,
                   ]}
-                  onPress={() => handleTagSearch(name)}
+                  // 인기 약품 클릭 시에는 '이름 검색'으로 동작해야 정확함
+                  onPress={() => {
+                      setSearchQuery(name);
+                      performSearch(name, false);
+                  }}
                 >
                   <Text style={styles.popularRank}>{index + 1}</Text>
                   <Text style={styles.popularName}>{name}</Text>
@@ -214,7 +235,8 @@ export default function SearchScreen({ navigation }: Props) {
         /* Search Results */
         <FlatList
           data={results}
-          keyExtractor={(item) => item.id.toString()}
+          // [중요] 키 추출: itemSeq가 있으면 쓰고, 없으면 id 사용
+          keyExtractor={(item) => item.itemSeq || (item.id ? item.id.toString() : Math.random().toString())}
           contentContainerStyle={styles.resultsList}
           renderItem={renderResultItem}
           showsVerticalScrollIndicator={false}
@@ -444,6 +466,11 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
     color: '#1e293b',
+    marginBottom: 2,
+  },
+  companyName: {
+    fontSize: 12,
+    color: '#64748b',
     marginBottom: 4,
   },
   resultDesc: {

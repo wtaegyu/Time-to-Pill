@@ -1,15 +1,16 @@
 package com.timetopill.entity;
 
-import com.timetopill.config.TableNames;
+import com.timetopill.config.TableNames; // 혹시 TableNames가 없다면 문자열 "schedules"로 대체 가능
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = TableNames.SCHEDULES,
-       indexes = {
-           @Index(name = "idx_schedules_user_date", columnList = "user_id, schedule_date")
-       })
+@Getter @Setter
+@Table(name = TableNames.SCHEDULES) // TableNames 클래스가 없다면 @Table(name = "schedules") 로 변경
 public class Schedule {
 
     @Id
@@ -20,56 +21,23 @@ public class Schedule {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    // ==========================================
+    // [수정 포인트] Pill -> DrugOverview 교체
+    // ==========================================
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "pill_id", nullable = false)
-    private Pill pill;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "schedule_time", nullable = false)
-    private ScheduleTime scheduleTime;
+    @JoinColumn(name = "item_seq", nullable = false) // DrugOverview의 PK (item_seq)와 연결
+    private DrugOverview drug;
 
     @Column(name = "schedule_date", nullable = false)
     private LocalDate scheduleDate;
 
-    @Column(nullable = false)
-    private Boolean taken = false;
+    @Column(name = "is_taken")
+    private boolean isTaken = false;
 
     @Column(name = "taken_at")
     private LocalDateTime takenAt;
 
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-
-    public enum ScheduleTime {
-        morning, afternoon, evening
-    }
-
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-    }
-
-    // Getters and Setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-
-    public User getUser() { return user; }
-    public void setUser(User user) { this.user = user; }
-
-    public Pill getPill() { return pill; }
-    public void setPill(Pill pill) { this.pill = pill; }
-
-    public ScheduleTime getScheduleTime() { return scheduleTime; }
-    public void setScheduleTime(ScheduleTime scheduleTime) { this.scheduleTime = scheduleTime; }
-
-    public LocalDate getScheduleDate() { return scheduleDate; }
-    public void setScheduleDate(LocalDate scheduleDate) { this.scheduleDate = scheduleDate; }
-
-    public Boolean getTaken() { return taken; }
-    public void setTaken(Boolean taken) { this.taken = taken; }
-
-    public LocalDateTime getTakenAt() { return takenAt; }
-    public void setTakenAt(LocalDateTime takenAt) { this.takenAt = takenAt; }
-
-    public LocalDateTime getCreatedAt() { return createdAt; }
+    // 시간대(아침/점심/저녁)가 필요하다면 추가
+    // @Enumerated(EnumType.STRING)
+    // private TimeSlot timeSlot;
 }

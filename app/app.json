@@ -1,8 +1,11 @@
 {
   "expo": {
-    "name": "app",
-    "slug": "app",
+    "name": "Time to Pill",
+    "slug": "time-to-pill",
     "version": "1.0.0",
+
+    "scheme": "timetopill",
+
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -13,7 +16,8 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.timetopill.app"
     },
     "android": {
       "adaptiveIcon": {
@@ -21,8 +25,7 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.app"
+      "package": "com.timetopill.app"
     },
     "web": {
       "favicon": "./assets/favicon.png"
