@@ -115,6 +115,8 @@ cd backend
 
 # 환경변수 설정
 $env:DB_PASSWORD="your_mysql_password"
+$env:GOOGLE_CLIENT_ID="your_google_client_id"
+$env:GOOGLE_CLIENT_SECRET="your_google_client_secret"
 
 # 실행
 ./gradlew bootRun
@@ -126,6 +128,8 @@ cd backend
 
 # 환경변수 설정
 set DB_PASSWORD=your_mysql_password
+set GOOGLE_CLIENT_ID=your_google_client_id
+set GOOGLE_CLIENT_SECRET=your_google_client_secret
 
 # 실행
 gradlew bootRun
@@ -262,6 +266,8 @@ erDiagram
 | `DB_NAME` | timetopill | 데이터베이스 이름 |
 | `DB_USERNAME` | root | 데이터베이스 사용자 |
 | `DB_PASSWORD` | - | 데이터베이스 비밀번호 |
+| `GOOGLE_CLIENT_ID` | - | Google OAuth Client ID (백엔드용) |
+| `GOOGLE_CLIENT_SECRET` | - | Google OAuth Client Secret |
 
 ---
 
