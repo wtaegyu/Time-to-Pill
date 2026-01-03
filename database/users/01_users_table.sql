@@ -1,0 +1,14 @@
+-- 사용자 테이블
+-- 기본 사용자 정보 및 인증 관련
+
+CREATE TABLE IF NOT EXISTS users (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    password VARCHAR(255),  -- OAuth 사용자는 NULL 가능
+    nickname VARCHAR(50) NOT NULL UNIQUE,
+    age INT,
+    gender ENUM('M', 'F'),
+    provider ENUM('LOCAL', 'GOOGLE') DEFAULT 'LOCAL',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
