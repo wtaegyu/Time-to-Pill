@@ -109,11 +109,14 @@ SOURCE database/migrations/V006_add_provider_column.sql;
 
 ### 3. Backend Setup
 
+> **환경변수 설정**: `backend/.env.example` 파일을 복사하여 `.env` 파일을 만들고 값을 채워주세요.
+> 실제 값은 팀원에게 별도로 전달받으세요.
+
 **PowerShell:**
 ```powershell
 cd backend
 
-# 환경변수 설정
+# .env 파일의 환경변수 설정
 $env:DB_PASSWORD="your_mysql_password"
 $env:GOOGLE_CLIENT_ID="your_google_client_id"
 $env:GOOGLE_CLIENT_SECRET="your_google_client_secret"
@@ -126,7 +129,7 @@ $env:GOOGLE_CLIENT_SECRET="your_google_client_secret"
 ```cmd
 cd backend
 
-# 환경변수 설정
+# .env 파일의 환경변수 설정
 set DB_PASSWORD=your_mysql_password
 set GOOGLE_CLIENT_ID=your_google_client_id
 set GOOGLE_CLIENT_SECRET=your_google_client_secret
