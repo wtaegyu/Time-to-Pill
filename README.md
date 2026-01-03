@@ -109,21 +109,48 @@ SOURCE database/migrations/V006_add_provider_column.sql;
 
 ### 3. Backend Setup
 
-```bash
+**PowerShell:**
+```powershell
 cd backend
 
-# 환경변수 설정 (Windows PowerShell)
+# 환경변수 설정
 $env:DB_PASSWORD="your_mysql_password"
 
 # 실행
 ./gradlew bootRun
 ```
 
+**CMD:**
+```cmd
+cd backend
+
+# 환경변수 설정
+set DB_PASSWORD=your_mysql_password
+
+# 실행
+gradlew bootRun
+```
+
 서버 주소: `http://localhost:8080`
 
 ### 4. Frontend Setup
 
-```bash
+**PowerShell:**
+```powershell
+cd app
+
+# 의존성 설치
+npm install
+
+# Expo 개발 서버 시작
+npm start
+
+# 또는 Android 직접 실행
+npm run android
+```
+
+**CMD:**
+```cmd
 cd app
 
 # 의존성 설치
@@ -250,9 +277,17 @@ erDiagram
 - `app/src/services/api.ts` 확인
 
 ### Gradle 빌드 오류
-```bash
+
+**PowerShell:**
+```powershell
 cd backend
 ./gradlew clean build --refresh-dependencies
+```
+
+**CMD:**
+```cmd
+cd backend
+gradlew clean build --refresh-dependencies
 ```
 
 ---
