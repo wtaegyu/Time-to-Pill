@@ -3,3 +3,8 @@ export { default as RegisterScreen } from './RegisterScreen';
 export { default as HomeScreen } from './HomeScreen';
 export { default as SearchScreen } from './SearchScreen';
 export { default as MyPageScreen } from './MyPageScreen';
+export { default as NotificationSettingsScreen } from './NotificationSettingsScreen';
+export { default as ChangePasswordScreen } from './ChangePasswordScreen';
+export { default as StatisticsScreen } from './StatisticsScreen';
+export { default as HelpScreen } from './HelpScreen';
+export { default as AppInfoScreen } from './AppInfoScreen';

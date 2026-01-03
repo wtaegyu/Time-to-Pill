@@ -6,6 +6,7 @@ import {
   StyleSheet,
   ScrollView,
   Alert,
+  StatusBar,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { authService } from '../services/authService';
@@ -42,26 +43,14 @@ export default function MyPageScreen({ navigation }: Props) {
       setMyPills(pills);
     } catch (error) {
       setMyPills([
-        {
-          id: 1,
-          name: '타이레놀',
-          description: '해열진통제',
-          dosage: '1정',
-          warnings: [],
-        },
-        {
-          id: 2,
-          name: '게보린',
-          description: '두통약',
-          dosage: '1정',
-          warnings: [],
-        },
+        { id: 1, name: '타이레놀', description: '해열진통제', dosage: '1정', warnings: [] },
+        { id: 2, name: '게보린', description: '두통약', dosage: '1정', warnings: [] },
       ]);
     }
   };
 
   const handleLogout = async () => {
-    Alert.alert('로그아웃', '로그아웃 하시겠습니까?', [
+    Alert.alert('로그아웃', '정말 로그아웃 하시겠습니까?', [
       { text: '취소', style: 'cancel' },
       {
         text: '로그아웃',
@@ -75,7 +64,7 @@ export default function MyPageScreen({ navigation }: Props) {
   };
 
   const handleRemovePill = async (pill: Pill) => {
-    Alert.alert('약 삭제', `${pill.name}을(를) 목록에서 삭제하시겠습니까?`, [
+    Alert.alert('약 삭제', `${pill.name}을(를) 삭제하시겠습니까?`, [
       { text: '취소', style: 'cancel' },
       {
         text: '삭제',
@@ -92,185 +81,282 @@ export default function MyPageScreen({ navigation }: Props) {
     ]);
   };
 
+  const menuItems = [
+    { label: '알림 설정', onPress: () => navigation.navigate('NotificationSettings') },
+    { label: '비밀번호 변경', onPress: () => navigation.navigate('ChangePassword') },
+    { label: '복약 통계', onPress: () => navigation.navigate('Statistics') },
+    { label: '도움말', onPress: () => navigation.navigate('Help') },
+    { label: '앱 정보', onPress: () => navigation.navigate('AppInfo') },
+  ];
+
   return (
-    <ScrollView style={styles.container}>
+    <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#f8fafc" />
+
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.backButton}>← 뒤로</Text>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Text style={styles.backIcon}>←</Text>
         </TouchableOpacity>
-        <Text style={styles.title}>마이페이지</Text>
-        <TouchableOpacity onPress={handleLogout}>
-          <Text style={styles.logoutButton}>로그아웃</Text>
-        </TouchableOpacity>
+        <Text style={styles.headerTitle}>마이페이지</Text>
+        <View style={{ width: 40 }} />
       </View>
 
-      {/* User Info */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>내 정보</Text>
-        <View style={styles.infoCard}>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>닉네임</Text>
-            <Text style={styles.infoValue}>{user?.nickname}</Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>나이</Text>
-            <Text style={styles.infoValue}>{user?.age}세</Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>성별</Text>
-            <Text style={styles.infoValue}>
-              {user?.gender === 'M' ? '남성' : '여성'}
-            </Text>
-          </View>
-        </View>
-        <TouchableOpacity style={styles.editButton}>
-          <Text style={styles.editButtonText}>정보 수정</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* My Pills */}
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>내 약 목록</Text>
-          <Text style={styles.pillCount}>{myPills.length}개</Text>
-        </View>
-        {myPills.length === 0 ? (
-          <View style={styles.emptyPills}>
-            <Text style={styles.emptyText}>등록된 약이 없습니다.</Text>
-          </View>
-        ) : (
-          myPills.map((pill) => (
-            <View key={pill.id} style={styles.pillCard}>
-              <View style={styles.pillInfo}>
-                <Text style={styles.pillName}>{pill.name}</Text>
-                <Text style={styles.pillDesc}>{pill.description}</Text>
-              </View>
-              <TouchableOpacity
-                style={styles.removeButton}
-                onPress={() => handleRemovePill(pill)}
-              >
-                <Text style={styles.removeButtonText}>삭제</Text>
-              </TouchableOpacity>
+      <ScrollView showsVerticalScrollIndicator={false}>
+        {/* Profile Card */}
+        <View style={styles.profileCard}>
+          <View style={styles.avatarContainer}>
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>
+                {user?.nickname?.charAt(0) || '?'}
+              </Text>
             </View>
-          ))
-        )}
-      </View>
+            <View style={styles.profileInfo}>
+              <Text style={styles.nickname}>{user?.nickname || '사용자'}</Text>
+              <Text style={styles.username}>@{user?.username}</Text>
+            </View>
+          </View>
+          <View style={styles.statsRow}>
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>{myPills.length}</Text>
+              <Text style={styles.statLabel}>등록된 약</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>{user?.age || '-'}</Text>
+              <Text style={styles.statLabel}>나이</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>
+                {user?.gender === 'M' ? '남' : user?.gender === 'F' ? '여' : '-'}
+              </Text>
+              <Text style={styles.statLabel}>성별</Text>
+            </View>
+          </View>
+          <TouchableOpacity style={styles.editProfileButton}>
+            <Text style={styles.editProfileText}>프로필 수정</Text>
+          </TouchableOpacity>
+        </View>
 
-      {/* Settings */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>설정</Text>
-        <TouchableOpacity style={styles.settingItem}>
-          <Text style={styles.settingText}>알림 설정</Text>
-          <Text style={styles.settingArrow}>→</Text>
+        {/* My Pills Section */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>내 약 목록</Text>
+            <TouchableOpacity onPress={() => navigation.navigate('Search')}>
+              <Text style={styles.addLink}>+ 추가</Text>
+            </TouchableOpacity>
+          </View>
+          {myPills.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyText}>등록된 약이 없습니다</Text>
+            </View>
+          ) : (
+            myPills.map((pill) => (
+              <View key={pill.id} style={styles.pillItem}>
+                <View style={styles.pillDot} />
+                <View style={styles.pillInfo}>
+                  <Text style={styles.pillName}>{pill.name}</Text>
+                  <Text style={styles.pillDesc}>{pill.dosage} · {pill.description}</Text>
+                </View>
+                <TouchableOpacity
+                  style={styles.pillRemove}
+                  onPress={() => handleRemovePill(pill)}
+                >
+                  <Text style={styles.pillRemoveText}>×</Text>
+                </TouchableOpacity>
+              </View>
+            ))
+          )}
+        </View>
+
+        {/* Menu Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>설정</Text>
+          {menuItems.map((item, index) => (
+            <TouchableOpacity
+              key={index}
+              style={[
+                styles.menuItem,
+                index === menuItems.length - 1 && styles.menuItemLast,
+              ]}
+              onPress={item.onPress}
+            >
+              <Text style={styles.menuLabel}>{item.label}</Text>
+              <Text style={styles.menuArrow}>›</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* Logout Button */}
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <Text style={styles.logoutText}>로그아웃</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.settingItem}>
-          <Text style={styles.settingText}>비밀번호 변경</Text>
-          <Text style={styles.settingArrow}>→</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.settingItem}>
-          <Text style={styles.settingText}>앱 정보</Text>
-          <Text style={styles.settingArrow}>→</Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+
+        <View style={{ height: 40 }} />
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f0f2f7',
+    backgroundColor: '#f8fafc',
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 16,
-    paddingTop: 48,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f2f7',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingTop: 60,
+    paddingBottom: 16,
   },
   backButton: {
-    color: '#4e7cff',
-    fontSize: 16,
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
   },
-  title: {
+  backIcon: {
+    fontSize: 18,
+    color: '#1e293b',
+  },
+  headerTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#1f1f1f',
+    color: '#1e293b',
   },
-  logoutButton: {
-    color: '#b12020',
+  profileCard: {
+    margin: 20,
+    marginTop: 8,
+    padding: 20,
+    backgroundColor: '#fff',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  avatarContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  avatar: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#1e293b',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
+  },
+  avatarText: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  profileInfo: {
+    flex: 1,
+  },
+  nickname: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1e293b',
+    marginBottom: 4,
+  },
+  username: {
     fontSize: 14,
+    color: '#64748b',
+  },
+  statsRow: {
+    flexDirection: 'row',
+    backgroundColor: '#f8fafc',
+    borderRadius: 10,
+    padding: 16,
+    marginBottom: 16,
+  },
+  statItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  statDivider: {
+    width: 1,
+    backgroundColor: '#e2e8f0',
+  },
+  statValue: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1e293b',
+    marginBottom: 4,
+  },
+  statLabel: {
+    fontSize: 12,
+    color: '#64748b',
+  },
+  editProfileButton: {
+    backgroundColor: '#f1f5f9',
+    padding: 14,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  editProfileText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#475569',
   },
   section: {
+    marginHorizontal: 20,
+    marginBottom: 16,
+    padding: 20,
     backgroundColor: '#fff',
-    marginTop: 16,
-    padding: 16,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 16,
   },
   sectionTitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
-    color: '#1f1f1f',
-    marginBottom: 12,
+    color: '#1e293b',
   },
-  pillCount: {
-    color: '#7a7a7a',
+  addLink: {
     fontSize: 14,
+    color: '#1e293b',
+    fontWeight: '600',
   },
-  infoCard: {
-    backgroundColor: '#f0f2f7',
-    borderRadius: 12,
-    padding: 16,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 8,
-  },
-  infoLabel: {
-    color: '#7a7a7a',
-    fontSize: 14,
-  },
-  infoValue: {
-    color: '#1f1f1f',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  editButton: {
-    marginTop: 12,
-    padding: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#cfd6e4',
+  emptyState: {
     alignItems: 'center',
-  },
-  editButtonText: {
-    color: '#1f1f1f',
-    fontSize: 14,
-  },
-  emptyPills: {
-    padding: 24,
-    alignItems: 'center',
+    paddingVertical: 24,
   },
   emptyText: {
-    color: '#7a7a7a',
+    fontSize: 14,
+    color: '#94a3b8',
   },
-  pillCard: {
+  pillItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 12,
-    backgroundColor: '#f0f2f7',
-    borderRadius: 8,
-    marginBottom: 8,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+  },
+  pillDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#1e293b',
+    marginRight: 14,
   },
   pillInfo: {
     flex: 1,
@@ -278,35 +364,57 @@ const styles = StyleSheet.create({
   pillName: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#1f1f1f',
+    color: '#1e293b',
+    marginBottom: 2,
   },
   pillDesc: {
     fontSize: 13,
-    color: '#7a7a7a',
-    marginTop: 2,
+    color: '#64748b',
   },
-  removeButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  removeButtonText: {
-    color: '#b12020',
-    fontSize: 14,
-  },
-  settingItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  pillRemove: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#fef2f2',
     alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pillRemoveText: {
+    fontSize: 16,
+    color: '#dc2626',
+    fontWeight: '500',
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f2f7',
+    borderBottomColor: '#f1f5f9',
   },
-  settingText: {
+  menuItemLast: {
+    borderBottomWidth: 0,
+  },
+  menuLabel: {
     fontSize: 15,
-    color: '#1f1f1f',
+    color: '#374151',
   },
-  settingArrow: {
-    color: '#7a7a7a',
-    fontSize: 16,
+  menuArrow: {
+    fontSize: 18,
+    color: '#94a3b8',
+  },
+  logoutButton: {
+    marginHorizontal: 20,
+    padding: 16,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#fecaca',
+  },
+  logoutText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#dc2626',
   },
 });
