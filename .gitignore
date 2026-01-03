@@ -35,6 +35,7 @@ app/.expo/
 # Logs
 *.log
 *.tmp
+
 # 환경 변수 파일
 .env
 .env.local
