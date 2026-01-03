@@ -30,6 +30,7 @@ SOURCE safety/01_safety_tables.sql;     -- user_groups, pill_safety
 ### 2단계: 의존 테이블
 ```sql
 SOURCE drugs/02_dur_info.sql;           -- dur_info, dur_combination_info
+SOURCE drugs/03_medicine.sql;           -- medicine (약품 정보)
 SOURCE schedules/01_schedule_table.sql; -- schedules (users FK)
 ```
 
@@ -57,6 +58,7 @@ SOURCE drugs/01_drug_overview.sql;
 SOURCE symptoms/01_symptom_tables.sql;
 SOURCE safety/01_safety_tables.sql;
 SOURCE drugs/02_dur_info.sql;
+SOURCE drugs/03_medicine.sql;
 SOURCE schedules/01_schedule_table.sql;
 SOURCE seeds/01_symptom_seeds.sql;
 SOURCE seeds/02_user_group_seeds.sql;
@@ -73,6 +75,7 @@ SOURCE seeds/02_user_group_seeds.sql;
 | drugs | 01_drug_overview | user_pills | 사용자-약품 매핑 |
 | drugs | 02_dur_info | dur_info | 단일 약품 금기 정보 |
 | drugs | 02_dur_info | dur_combination_info | 병용금기 정보 |
+| drugs | 03_medicine | medicine | 약품 정보 (이미지 포함) |
 | symptoms | 01_symptom_tables | symptom | 표준 증상 |
 | symptoms | 01_symptom_tables | symptom_alias | 증상 별칭/변형 |
 | symptoms | 01_symptom_tables | typo_correction | 오타 교정 |
@@ -80,6 +83,29 @@ SOURCE seeds/02_user_group_seeds.sql;
 | safety | 01_safety_tables | user_groups | 사용자 그룹 |
 | safety | 01_safety_tables | pill_safety | 약품별 안전 정보 |
 | schedules | 01_schedule_table | schedules | 복약 스케줄 |
+
+---
+
+## 덤프 파일로 데이터 가져오기
+
+약품 데이터가 포함된 덤프 파일 (`timetopill_localhost-2026_01_01_23_26_10-dump.sql`, 약 1GB)을 사용하여 실제 데이터를 가져올 수 있습니다.
+
+```bash
+# MySQL 접속 후 덤프 파일 실행
+mysql -u root -p timetopill < database/timetopill_localhost-2026_01_01_23_26_10-dump.sql
+
+# 또는 MySQL CLI에서
+mysql> USE timetopill;
+mysql> SOURCE database/timetopill_localhost-2026_01_01_23_26_10-dump.sql;
+```
+
+**포함된 데이터:**
+| 테이블 | 데이터 량 | 설명 |
+|--------|----------|------|
+| drug_overview | ~44,000건 | 약품 기본 정보 |
+| dur_info | ~23,000건 | 단일 금기 정보 |
+| dur_combination_info | ~837,000건 | 병용금기 정보 |
+| medicine | ~44,000건 | 약품 정보 (이미지 포함) |
 
 ---
 
