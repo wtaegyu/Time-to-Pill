@@ -1,71 +1,64 @@
 package com.timetopill.service;
 
-import com.timetopill.dto.PillDto.*;
-import com.timetopill.entity.Pill;
+import com.timetopill.dto.DrugSearchDto;
+import com.timetopill.entity.DrugOverview;
 import com.timetopill.entity.User;
 import com.timetopill.entity.UserPill;
-import com.timetopill.repository.PillRepository;
+import com.timetopill.repository.DrugOverviewRepository;
 import com.timetopill.repository.UserPillRepository;
+import com.timetopill.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.util.List;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Slf4j
 @Service
-@Transactional(readOnly = true)
+@Transactional
+@RequiredArgsConstructor
 public class PillService {
 
-    private final PillRepository pillRepository;
     private final UserPillRepository userPillRepository;
+    private final DrugOverviewRepository drugRepository;
+    private final UserRepository userRepository;
 
-    public PillService(PillRepository pillRepository, UserPillRepository userPillRepository) {
-        this.pillRepository = pillRepository;
-        this.userPillRepository = userPillRepository;
+    // 1. 내 약통 조회
+    @Transactional(readOnly = true)
+    public List<DrugSearchDto> getMyPills(Long userId) {
+        List<UserPill> userPills = userPillRepository.findByUserIdWithPill(userId);
+
+        return userPills.stream()
+                .map(userPill -> DrugSearchDto.from(userPill.getDrug()))
+                .collect(Collectors.toList());
     }
 
-    public List<PillResponse> searchByName(String name) {
-        return pillRepository.findByNameContainingIgnoreCase(name).stream()
-            .map(PillResponse::fromWithoutWarnings)
-            .toList();
-    }
+    // 2. 내 약통에 추가
+    public void addPill(Long userId, String itemSeq) {
+        log.info("💊 약 추가 시도 - User: {}, ItemSeq: {}", userId, itemSeq);
 
-    public List<PillResponse> searchBySymptom(String symptom) {
-        return pillRepository.findBySymptom(symptom).stream()
-            .map(PillResponse::fromWithoutWarnings)
-            .toList();
-    }
-
-    public PillResponse getPillDetail(Long pillId) {
-        Pill pill = pillRepository.findByIdWithWarnings(pillId);
-        if (pill == null) {
-            throw new IllegalArgumentException("Pill not found");
-        }
-        return PillResponse.from(pill);
-    }
-
-    public List<PillResponse> getMyPills(Long userId) {
-        return userPillRepository.findByUserIdWithPill(userId).stream()
-            .map(up -> PillResponse.fromWithoutWarnings(up.getPill()))
-            .toList();
-    }
-
-    @Transactional
-    public void addPillToUser(Long userId, Long pillId, User user) {
-        if (userPillRepository.existsByUserIdAndPillId(userId, pillId)) {
-            throw new IllegalArgumentException("Pill already added");
+        if (userPillRepository.existsByUserIdAndDrug_ItemSeq(userId, itemSeq)) {
+            log.warn("⚠️ 이미 존재하는 약입니다.");
+            throw new IllegalArgumentException("이미 내 약통에 있는 약입니다.");
         }
 
-        Pill pill = pillRepository.findById(pillId)
-            .orElseThrow(() -> new IllegalArgumentException("Pill not found"));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+        DrugOverview drug = drugRepository.findById(itemSeq)
+                .orElseThrow(() -> new RuntimeException("약 정보를 찾을 수 없습니다."));
 
         UserPill userPill = new UserPill();
         userPill.setUser(user);
-        userPill.setPill(pill);
+        userPill.setDrug(drug);
 
         userPillRepository.save(userPill);
+        log.info("✅ DB 저장 성공!");
     }
 
-    @Transactional
-    public void removePillFromUser(Long userId, Long pillId) {
-        userPillRepository.deleteByUserIdAndPillId(userId, pillId);
+    // 3. 내 약통에서 삭제
+    public void deletePill(Long userId, String itemSeq) {
+        userPillRepository.deleteByUserIdAndDrug_ItemSeq(userId, itemSeq);
     }
 }

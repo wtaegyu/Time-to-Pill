@@ -11,12 +11,17 @@ import java.util.Optional;
 @Repository
 public interface UserPillRepository extends JpaRepository<UserPill, Long> {
 
-    @Query("SELECT up FROM UserPill up JOIN FETCH up.pill WHERE up.user.id = :userId")
+    // [추가] 이 한 줄을 추가해야 PillService의 에러가 사라집니다!
+    List<UserPill> findByUserId(Long userId);
+
+    // [기존] 성능 최적화 버전 (JOIN FETCH)
+    @Query("SELECT up FROM UserPill up JOIN FETCH up.drug WHERE up.user.id = :userId")
     List<UserPill> findByUserIdWithPill(@Param("userId") Long userId);
 
-    Optional<UserPill> findByUserIdAndPillId(Long userId, Long pillId);
+    // [기존] 중복 검사
+    Optional<UserPill> findByUserIdAndDrug_ItemSeq(Long userId, String itemSeq);
 
-    boolean existsByUserIdAndPillId(Long userId, Long pillId);
+    boolean existsByUserIdAndDrug_ItemSeq(Long userId, String itemSeq);
 
-    void deleteByUserIdAndPillId(Long userId, Long pillId);
+    void deleteByUserIdAndDrug_ItemSeq(Long userId, String itemSeq);
 }
