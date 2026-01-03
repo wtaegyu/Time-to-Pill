@@ -3,6 +3,7 @@
 .vscode/
 .claude/
 *.iml
+CLAUDE.md
 
 # OS
 .DS_Store
