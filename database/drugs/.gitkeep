@@ -1,0 +1,3 @@
+# This folder contains drug data SQL files
+# Large data files (*_ver_sy.sql) are not tracked in git
+# Download them separately or import from dump file
