@@ -6,7 +6,7 @@ import pymysql
 # ==========================================
 DB_HOST = "localhost"
 DB_USER = "root"
-DB_PASS = "thdustkfkd09!"  # 비밀번호 입력
+DB_PASS = "YOUT_PASSWORD"  # 비밀번호 입력
 DB_NAME = "timetopill" # DB 이름 입력
 
 def get_db_connection():
@@ -15,11 +15,11 @@ def get_db_connection():
     )
 
 FILES = {
-    "age": "의약품안전사용서비스(DUR)_연령금기 품목리스트 2025.6.csv",
-    "preg": "의약품안전사용서비스(DUR)_임부금기 품목리스트 2025.6.csv",
-    "old": "의약품안전사용서비스(DUR)_노인주의 품목리스트 2025.6.csv",
-    "old_nsaid": "의약품안전사용서비스(DUR)_노인주의(해열진통소염제) 품목리스트 2025.6.csv",
-    "combo": "의약품안전사용서비스(DUR)_병용금기 품목리스트 2025.6.csv" # [NEW] 파일명 정확히 입력
+    "age": "DUR_AgeTaboo.csv",
+    "preg": "DUR_PregnancyTaboo.csv",
+    "old": "DUR_ElderlyCare.csv",
+    "old_nsaid": "DUR_ElderlyCare_antipyretics.csv",
+    "combo": "DUR_Contraindication_for_combined_use.csv" #
 }
 
 def clean_text(text):
