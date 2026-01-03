@@ -9,7 +9,7 @@ export interface User {
 
 // Pill types
 export interface Pill {
-  id: number;
+  itemSeq: string;
   name: string;
   description: string;
   dosage: string;

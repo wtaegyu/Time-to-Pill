@@ -37,3 +37,12 @@ app/.expo/
 # Logs
 *.log
 *.tmp
+
+# 환경 변수 파일
+.env
+.env.local
+
+# Spring Boot Config (Sensitive Data)
+backend/src/main/resources/application.yml
+*.csv
+*.sql
