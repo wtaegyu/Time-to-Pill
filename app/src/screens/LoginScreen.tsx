@@ -11,13 +11,15 @@ import {
   StatusBar,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import * as Google from 'expo-auth-session/providers/google';
-import * as WebBrowser from 'expo-web-browser';
+import {
+  GoogleSignin,
+  isSuccessResponse,
+  isErrorWithCode,
+  statusCodes,
+} from '@react-native-google-signin/google-signin';
 import { authService } from '../services/authService';
 import api from '../services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
-WebBrowser.maybeCompleteAuthSession();
 
 type Props = {
   navigation: NativeStackNavigationProp<any>;
@@ -29,45 +31,41 @@ export default function LoginScreen({ navigation }: Props) {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const [request, response, promptAsync] = Google.useAuthRequest({
-    androidClientId: 'YOUR_ANDROID_CLIENT_ID.apps.googleusercontent.com',
-    webClientId: 'YOUR_WEB_CLIENT_ID.apps.googleusercontent.com',
-  });
-
   useEffect(() => {
-    handleGoogleResponse();
-  }, [response]);
+    GoogleSignin.configure({
+      webClientId: '329734818686-lni9h7e611qtkbec8f92fkef628dot8n.apps.googleusercontent.com',
+    });
+  }, []);
 
-  const handleGoogleResponse = async () => {
-    if (response?.type === 'success') {
-      const { authentication } = response;
-      if (authentication?.accessToken) {
-        await handleGoogleLogin(authentication.accessToken);
-      }
-    }
-  };
-
-  const handleGoogleLogin = async (accessToken: string) => {
+  const handleGoogleSignIn = async () => {
     setLoading(true);
     try {
-      const userInfoResponse = await fetch(
-        'https://www.googleapis.com/userinfo/v2/me',
-        { headers: { Authorization: `Bearer ${accessToken}` } }
-      );
-      const userInfo = await userInfoResponse.json();
+      await GoogleSignin.hasPlayServices();
+      const response = await GoogleSignin.signIn();
 
-      const res = await api.post('/auth/google', {
-        email: userInfo.email,
-        name: userInfo.name,
-        googleId: userInfo.id,
-      });
+      if (isSuccessResponse(response)) {
+        const { data } = response;
+        Alert.alert('Google 성공', `이메일: ${data.user.email}`);
 
-      await AsyncStorage.setItem('token', res.data.token);
-      await AsyncStorage.setItem('user', JSON.stringify(res.data.user));
+        try {
+          const res = await api.post('/auth/google', {
+            email: data.user.email,
+            name: data.user.name,
+            googleId: data.user.id,
+          });
 
-      navigation.replace('Home');
-    } catch (error) {
-      Alert.alert('Google 로그인 실패', '다시 시도해주세요.');
+          await AsyncStorage.setItem('token', res.data.token);
+          await AsyncStorage.setItem('user', JSON.stringify(res.data.user));
+
+          navigation.replace('Home');
+        } catch (apiError: any) {
+          Alert.alert('서버 연결 실패', JSON.stringify(apiError.response?.data || apiError.message));
+        }
+      } else {
+        Alert.alert('Google 응답', JSON.stringify(response));
+      }
+    } catch (error: any) {
+      Alert.alert('Google 에러', `코드: ${error.code}\n메시지: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -168,8 +166,8 @@ export default function LoginScreen({ navigation }: Props) {
         {/* Social Login */}
         <TouchableOpacity
           style={styles.googleButton}
-          onPress={() => promptAsync()}
-          disabled={!request || loading}
+          onPress={handleGoogleSignIn}
+          disabled={loading}
         >
           <Text style={styles.googleIcon}>G</Text>
           <Text style={styles.googleButtonText}>Google로 계속하기</Text>
