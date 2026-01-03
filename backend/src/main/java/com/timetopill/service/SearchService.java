@@ -5,16 +5,17 @@ import com.timetopill.entity.DrugOverview;
 import com.timetopill.entity.DurInfo;
 import com.timetopill.repository.DrugOverviewRepository;
 import com.timetopill.repository.DurInfoRepository;
+import com.timetopill.symptommapper.mapping.MatchResult;
+import com.timetopill.symptommapper.service.MappingService;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j; // 로그용
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
-@Slf4j // 로그 기능을 켭니다
+@Slf4j
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
@@ -22,6 +23,7 @@ public class SearchService {
 
     private final DrugOverviewRepository drugRepository;
     private final DurInfoRepository durInfoRepository;
+    private final MappingService mappingService;
 
     // 1. 이름 검색
     public List<DrugSearchDto> searchByName(String keyword) {
@@ -39,14 +41,37 @@ public class SearchService {
         }
     }
 
-    // 2. 증상 검색
+    // 2. 증상 검색 (MappingService로 증상 정규화 후 검색)
     public List<DrugSearchDto> searchBySymptom(String keyword) {
         try {
             log.info("🔍 증상 검색 시작: {}", keyword);
-            List<DrugOverview> drugs = drugRepository.findByEfficacyTextContaining(keyword);
-            log.info("✅ 증상 검색 결과: {}건 발견", drugs.size());
 
-            return drugs.stream()
+            // 1) MappingService로 증상 정규화/매핑
+            List<MatchResult> mappedSymptoms = mappingService.mapSymptoms(keyword);
+            log.info("📊 매핑된 증상: {}", mappedSymptoms.stream()
+                    .map(m -> m.displayNameKo() + "(" + m.confidence() + ")")
+                    .collect(Collectors.joining(", ")));
+
+            // 2) 매핑된 증상들로 검색 (중복 제거를 위해 LinkedHashSet 사용)
+            Set<DrugOverview> resultSet = new LinkedHashSet<>();
+
+            for (MatchResult match : mappedSymptoms) {
+                // 표준 증상명(한글)으로 efficacyText 검색
+                String symptomName = match.displayNameKo();
+                List<DrugOverview> drugs = drugRepository.findByEfficacyTextContaining(symptomName);
+                resultSet.addAll(drugs);
+                log.info("  → '{}' 검색 결과: {}건", symptomName, drugs.size());
+            }
+
+            // 3) 매핑 실패 시 기존 LIKE 검색 폴백
+            if (mappedSymptoms.isEmpty()) {
+                log.info("⚠️ 매핑 실패, 원본 키워드로 폴백 검색: {}", keyword);
+                resultSet.addAll(drugRepository.findByEfficacyTextContaining(keyword));
+            }
+
+            log.info("✅ 증상 검색 최종 결과: {}건 발견", resultSet.size());
+
+            return resultSet.stream()
                     .map(this::convertToDto)
                     .collect(Collectors.toList());
         } catch (Exception e) {
