@@ -111,7 +111,7 @@ export default function CameraScreen({ navigation }: Props) {
           /* No Image State */
           <View style={styles.placeholder}>
             <View style={styles.placeholderIcon}>
-              <Text style={styles.placeholderEmoji}>📋</Text>
+              <View style={styles.placeholderCamera} />
             </View>
             <Text style={styles.placeholderTitle}>처방전을 촬영하세요</Text>
             <Text style={styles.placeholderDesc}>
@@ -120,12 +120,10 @@ export default function CameraScreen({ navigation }: Props) {
 
             <View style={styles.buttonGroup}>
               <TouchableOpacity style={styles.primaryButton} onPress={takePhoto}>
-                <Text style={styles.primaryButtonIcon}>📷</Text>
                 <Text style={styles.primaryButtonText}>카메라로 촬영</Text>
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.secondaryButton} onPress={pickImage}>
-                <Text style={styles.secondaryButtonIcon}>🖼️</Text>
                 <Text style={styles.secondaryButtonText}>갤러리에서 선택</Text>
               </TouchableOpacity>
             </View>
@@ -148,10 +146,7 @@ export default function CameraScreen({ navigation }: Props) {
                 {loading ? (
                   <ActivityIndicator color="#fff" size="small" />
                 ) : (
-                  <>
-                    <Text style={styles.analyzeButtonIcon}>🔍</Text>
-                    <Text style={styles.analyzeButtonText}>분석하기</Text>
-                  </>
+                  <Text style={styles.analyzeButtonText}>분석하기</Text>
                 )}
               </TouchableOpacity>
             </View>
@@ -222,8 +217,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 24,
   },
-  placeholderEmoji: {
-    fontSize: 48,
+  placeholderCamera: {
+    width: 40,
+    height: 32,
+    borderRadius: 6,
+    borderWidth: 3,
+    borderColor: '#94a3b8',
   },
   placeholderTitle: {
     fontSize: 20,
@@ -243,16 +242,11 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   primaryButton: {
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#1e293b',
     paddingVertical: 16,
     borderRadius: 12,
-    gap: 10,
-  },
-  primaryButtonIcon: {
-    fontSize: 20,
   },
   primaryButtonText: {
     fontSize: 16,
@@ -260,7 +254,6 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   secondaryButton: {
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#fff',
@@ -268,10 +261,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#e2e8f0',
-    gap: 10,
-  },
-  secondaryButtonIcon: {
-    fontSize: 20,
   },
   secondaryButtonText: {
     fontSize: 16,
@@ -309,19 +298,14 @@ const styles = StyleSheet.create({
   },
   analyzeButton: {
     flex: 2,
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#1e293b',
     paddingVertical: 16,
     borderRadius: 12,
-    gap: 8,
   },
   analyzeButtonDisabled: {
     opacity: 0.7,
-  },
-  analyzeButtonIcon: {
-    fontSize: 18,
   },
   analyzeButtonText: {
     fontSize: 16,
