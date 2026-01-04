@@ -13,6 +13,10 @@ public class SymptomMapper {
 
     private static final double THRESHOLD = 0.75;
 
+    public boolean isCacheEmpty() {
+        return dict.isEmpty();
+    }
+
     private static final List<Rule> RULES = List.of(
             new Rule("HEADACHE", ".*(두통|머리.*아프|지끈|어지럽).*", 0.10),
             new Rule("TOOTHACHE", ".*(치통|이.*아프|잇몸.*아프).*", 0.10),
