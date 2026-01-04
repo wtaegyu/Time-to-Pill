@@ -8,3 +8,5 @@ export { default as ChangePasswordScreen } from './ChangePasswordScreen';
 export { default as StatisticsScreen } from './StatisticsScreen';
 export { default as HelpScreen } from './HelpScreen';
 export { default as AppInfoScreen } from './AppInfoScreen';
+export { default as CalendarScreen } from './CalendarScreen';
+export { default as CameraScreen } from './CameraScreen';

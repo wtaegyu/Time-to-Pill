@@ -13,6 +13,8 @@ import {
   StatisticsScreen,
   HelpScreen,
   AppInfoScreen,
+  CalendarScreen,
+  CameraScreen,
 } from '../screens';
 
 export type RootStackParamList = {
@@ -28,6 +30,8 @@ export type RootStackParamList = {
   Statistics: undefined;
   Help: undefined;
   AppInfo: undefined;
+  Calendar: undefined;
+  Camera: undefined;
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -71,6 +75,10 @@ export default function AppNavigator() {
         <Stack.Screen name="Statistics" component={StatisticsScreen} />
         <Stack.Screen name="Help" component={HelpScreen} />
         <Stack.Screen name="AppInfo" component={AppInfoScreen} />
+
+        {/* Feature Screens */}
+        <Stack.Screen name="Calendar" component={CalendarScreen} />
+        <Stack.Screen name="Camera" component={CameraScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
