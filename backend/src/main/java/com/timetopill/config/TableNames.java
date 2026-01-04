@@ -24,4 +24,10 @@ public final class TableNames {
     // 5. 복용 일정
     public static final String SCHEDULES = "schedules";
 
+    // 6. 증상 매핑 (symptom_search_logic)
+    public static final String SYMPTOM = "symptom";
+    public static final String SYMPTOM_ALIAS = "symptom_alias";
+    public static final String TYPO_CORRECTION = "typo_correction";
+    public static final String UNMAPPED_TERM = "unmapped_term";
+
 }
