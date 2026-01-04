@@ -24,7 +24,7 @@ public class DrugFetchService {
 
     private final DrugOverviewRepository drugRepository;
 
-    @org.springframework.beans.factory.annotation.Value("${api.service-key}")
+    @org.springframework.beans.factory.annotation.Value("${api.service-key:}")
     private String SERVICE_KEY;
 
     private static final String API_URL = "https://apis.data.go.kr/1471000/DrugPrdtPrmsnInfoService07/getDrugPrdtPrmsnDtlInq06";
