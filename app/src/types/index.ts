@@ -53,6 +53,22 @@ export interface PillSchedule {
   date: string;
 }
 
+// 복용 빈도
+export type Frequency = 'DAILY' | 'EVERY_OTHER_DAY' | 'EVERY_3_DAYS' | 'WEEKLY' | 'CUSTOM';
+
+// 복용 시간대
+export type TimeSlot = 'MORNING' | 'AFTERNOON' | 'EVENING';
+
+// 약 등록 요청 (스케줄 포함)
+export interface PillScheduleRequest {
+  itemSeq: string;
+  startDate: string;       // YYYY-MM-DD
+  endDate?: string;        // YYYY-MM-DD (선택, null이면 무기한)
+  frequency: Frequency;
+  customDays?: string[];   // CUSTOM일 때: ['MON', 'WED', 'FRI']
+  timeSlots: TimeSlot[];   // ['MORNING', 'EVENING']
+}
+
 // Pill status for UI
 export type PillStatus = 'ok' | 'warn' | 'danger';
 

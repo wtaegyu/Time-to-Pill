@@ -15,6 +15,7 @@ import {
   AppInfoScreen,
   CalendarScreen,
   CameraScreen,
+  AddPillScheduleScreen,
 } from '../screens';
 
 export type RootStackParamList = {
@@ -25,6 +26,7 @@ export type RootStackParamList = {
   MyPage: undefined;
   PillDetail: { pill: any };
   AddPill: undefined;
+  AddPillSchedule: { pill: any };
   NotificationSettings: undefined;
   ChangePassword: undefined;
   Statistics: undefined;
@@ -79,6 +81,7 @@ export default function AppNavigator() {
         {/* Feature Screens */}
         <Stack.Screen name="Calendar" component={CalendarScreen} />
         <Stack.Screen name="Camera" component={CameraScreen} />
+        <Stack.Screen name="AddPillSchedule" component={AddPillScheduleScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
