@@ -271,31 +271,34 @@ export default function HomeScreen({ navigation }: Props) {
       {/* Bottom Navigation */}
       <View style={styles.bottomNav}>
         <TouchableOpacity style={styles.navItem}>
-          <View style={[styles.navDot, styles.navDotActive]} />
+          <Text style={styles.navIconActive}>🏠</Text>
           <Text style={styles.navTextActive}>홈</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.navItem}
           onPress={() => navigation.navigate('Search')}
         >
-          <View style={styles.navDot} />
+          <Text style={styles.navIcon}>🔍</Text>
           <Text style={styles.navText}>검색</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.navAddButton}
-          onPress={() => navigation.navigate('Search')}
+          onPress={() => navigation.navigate('Camera')}
         >
-          <Text style={styles.navAddIcon}>+</Text>
+          <Text style={styles.navAddIcon}>📷</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <View style={styles.navDot} />
-          <Text style={styles.navText}>통계</Text>
+        <TouchableOpacity
+          style={styles.navItem}
+          onPress={() => navigation.navigate('Calendar')}
+        >
+          <Text style={styles.navIcon}>📅</Text>
+          <Text style={styles.navText}>캘린더</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.navItem}
           onPress={() => navigation.navigate('MyPage')}
         >
-          <View style={styles.navDot} />
+          <Text style={styles.navIcon}>⚙️</Text>
           <Text style={styles.navText}>설정</Text>
         </TouchableOpacity>
       </View>
@@ -573,15 +576,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 6,
   },
-  navDot: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: '#cbd5e1',
-    marginBottom: 6,
+  navIcon: {
+    fontSize: 20,
+    marginBottom: 4,
+    opacity: 0.5,
   },
-  navDotActive: {
-    backgroundColor: '#1e293b',
+  navIconActive: {
+    fontSize: 20,
+    marginBottom: 4,
   },
   navText: {
     fontSize: 11,
