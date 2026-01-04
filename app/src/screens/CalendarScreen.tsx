@@ -22,7 +22,21 @@ interface DayRecord {
   date: string;
   total: number;
   taken: number;
+  pills: PillRecord[];
 }
+
+interface PillRecord {
+  id: number;
+  name: string;
+  time: 'morning' | 'afternoon' | 'evening';
+  taken: boolean;
+}
+
+const TIME_LABELS = {
+  morning: '아침',
+  afternoon: '점심',
+  evening: '저녁',
+};
 
 export default function CalendarScreen({ navigation }: Props) {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -40,6 +54,14 @@ export default function CalendarScreen({ navigation }: Props) {
     const month = currentDate.getMonth();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
 
+    // 샘플 약 목록
+    const samplePills = [
+      { id: 1, name: '타이레놀 500mg', time: 'morning' as const },
+      { id: 2, name: '오메가3', time: 'morning' as const },
+      { id: 3, name: '비타민D', time: 'afternoon' as const },
+      { id: 4, name: '유산균', time: 'evening' as const },
+    ];
+
     const dummyRecords: Record<string, DayRecord> = {};
     for (let day = 1; day <= daysInMonth; day++) {
       const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
@@ -48,9 +70,13 @@ export default function CalendarScreen({ navigation }: Props) {
 
       // 과거 날짜만 기록 생성
       if (checkDate <= today) {
-        const total = Math.floor(Math.random() * 3) + 2; // 2-4개
-        const taken = Math.floor(Math.random() * (total + 1)); // 0 ~ total
-        dummyRecords[dateStr] = { date: dateStr, total, taken };
+        // 각 약에 대해 랜덤하게 복용 여부 결정
+        const pills: PillRecord[] = samplePills.map(p => ({
+          ...p,
+          taken: Math.random() > 0.3, // 70% 확률로 복용
+        }));
+        const taken = pills.filter(p => p.taken).length;
+        dummyRecords[dateStr] = { date: dateStr, total: pills.length, taken, pills };
       }
     }
     setRecords(dummyRecords);
@@ -279,6 +305,26 @@ export default function CalendarScreen({ navigation }: Props) {
                   { width: `${(selectedRecord.taken / selectedRecord.total) * 100}%` },
                 ]}
               />
+            </View>
+
+            {/* 복약 목록 */}
+            <View style={styles.pillList}>
+              {selectedRecord.pills.map((pill) => (
+                <View key={pill.id} style={styles.pillItem}>
+                  <View style={styles.pillInfo}>
+                    <View style={[styles.pillDot, pill.taken && styles.pillDotTaken]} />
+                    <View>
+                      <Text style={[styles.pillName, pill.taken && styles.pillNameTaken]}>
+                        {pill.name}
+                      </Text>
+                      <Text style={styles.pillTime}>{TIME_LABELS[pill.time]}</Text>
+                    </View>
+                  </View>
+                  <Text style={[styles.pillStatus, pill.taken ? styles.pillStatusTaken : styles.pillStatusMissed]}>
+                    {pill.taken ? '복용' : '미복용'}
+                  </Text>
+                </View>
+              ))}
             </View>
           </View>
         )}
@@ -509,5 +555,56 @@ const styles = StyleSheet.create({
     height: 8,
     backgroundColor: '#10b981',
     borderRadius: 4,
+  },
+  pillList: {
+    marginTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#e2e8f0',
+    paddingTop: 16,
+  },
+  pillItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+  },
+  pillInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  pillDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#ef4444',
+  },
+  pillDotTaken: {
+    backgroundColor: '#10b981',
+  },
+  pillName: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: '#1e293b',
+  },
+  pillNameTaken: {
+    color: '#64748b',
+  },
+  pillTime: {
+    fontSize: 12,
+    color: '#94a3b8',
+    marginTop: 2,
+  },
+  pillStatus: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  pillStatusTaken: {
+    color: '#10b981',
+  },
+  pillStatusMissed: {
+    color: '#ef4444',
   },
 });
