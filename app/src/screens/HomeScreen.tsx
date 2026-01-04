@@ -271,34 +271,34 @@ export default function HomeScreen({ navigation }: Props) {
       {/* Bottom Navigation */}
       <View style={styles.bottomNav}>
         <TouchableOpacity style={styles.navItem}>
-          <Text style={styles.navIconActive}>🏠</Text>
+          <View style={[styles.navDot, styles.navDotActive]} />
           <Text style={styles.navTextActive}>홈</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.navItem}
           onPress={() => navigation.navigate('Search')}
         >
-          <Text style={styles.navIcon}>🔍</Text>
+          <View style={styles.navDot} />
           <Text style={styles.navText}>검색</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.navAddButton}
           onPress={() => navigation.navigate('Camera')}
         >
-          <Text style={styles.navAddIcon}>📷</Text>
+          <View style={styles.navCameraIcon} />
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.navItem}
           onPress={() => navigation.navigate('Calendar')}
         >
-          <Text style={styles.navIcon}>📅</Text>
+          <View style={styles.navDot} />
           <Text style={styles.navText}>캘린더</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.navItem}
           onPress={() => navigation.navigate('MyPage')}
         >
-          <Text style={styles.navIcon}>⚙️</Text>
+          <View style={styles.navDot} />
           <Text style={styles.navText}>설정</Text>
         </TouchableOpacity>
       </View>
@@ -576,14 +576,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 6,
   },
-  navIcon: {
-    fontSize: 20,
-    marginBottom: 4,
-    opacity: 0.5,
+  navDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#cbd5e1',
+    marginBottom: 6,
   },
-  navIconActive: {
-    fontSize: 20,
-    marginBottom: 4,
+  navDotActive: {
+    backgroundColor: '#1e293b',
   },
   navText: {
     fontSize: 11,
@@ -605,9 +606,11 @@ const styles = StyleSheet.create({
     marginHorizontal: 8,
     marginTop: -16,
   },
-  navAddIcon: {
-    fontSize: 24,
-    color: '#fff',
-    fontWeight: '300',
+  navCameraIcon: {
+    width: 20,
+    height: 16,
+    borderRadius: 3,
+    borderWidth: 2,
+    borderColor: '#fff',
   },
 });
