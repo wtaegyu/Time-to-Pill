@@ -4,92 +4,39 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  Image,
   Alert,
   StatusBar,
   ActivityIndicator,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import * as ImagePicker from 'expo-image-picker';
-import { pillService } from '../services/pillService';
 
 type Props = {
   navigation: NativeStackNavigationProp<any>;
 };
 
 export default function CameraScreen({ navigation }: Props) {
-  const [image, setImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const requestPermission = async () => {
-    const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('권한 필요', '카메라 권한이 필요합니다.');
-      return false;
-    }
-    return true;
+  const handleCameraPress = () => {
+    Alert.alert(
+      '준비 중',
+      '카메라 기능은 준비 중입니다.\n검색 화면에서 직접 약을 검색해주세요.',
+      [
+        { text: '취소', style: 'cancel' },
+        { text: '검색하기', onPress: () => navigation.navigate('Search') },
+      ]
+    );
   };
 
-  const takePhoto = async () => {
-    const hasPermission = await requestPermission();
-    if (!hasPermission) return;
-
-    const result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ['images'],
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 0.8,
-    });
-
-    if (!result.canceled && result.assets[0]) {
-      setImage(result.assets[0].uri);
-    }
-  };
-
-  const pickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 0.8,
-    });
-
-    if (!result.canceled && result.assets[0]) {
-      setImage(result.assets[0].uri);
-    }
-  };
-
-  const analyzePrescription = async () => {
-    if (!image) return;
-
-    setLoading(true);
-    try {
-      // TODO: 실제 OCR API 연동
-      // const pills = await pillService.uploadPrescription(image);
-
-      // 현재는 시뮬레이션
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-
-      Alert.alert(
-        '분석 완료',
-        '처방전에서 3개의 약을 찾았습니다.\n\n- 타이레놀 500mg\n- 게보린\n- 비타민C\n\n검색 화면에서 확인하시겠습니까?',
-        [
-          { text: '취소', style: 'cancel' },
-          {
-            text: '확인',
-            onPress: () => navigation.navigate('Search'),
-          },
-        ]
-      );
-    } catch (error) {
-      Alert.alert('오류', '처방전 분석 중 오류가 발생했습니다.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const resetImage = () => {
-    setImage(null);
+  const handleGalleryPress = () => {
+    Alert.alert(
+      '준비 중',
+      '갤러리 기능은 준비 중입니다.\n검색 화면에서 직접 약을 검색해주세요.',
+      [
+        { text: '취소', style: 'cancel' },
+        { text: '검색하기', onPress: () => navigation.navigate('Search') },
+      ]
+    );
   };
 
   return (
@@ -107,51 +54,27 @@ export default function CameraScreen({ navigation }: Props) {
 
       {/* Content */}
       <View style={styles.content}>
-        {!image ? (
-          /* No Image State */
-          <View style={styles.placeholder}>
-            <View style={styles.placeholderIcon}>
-              <View style={styles.placeholderCamera} />
-            </View>
-            <Text style={styles.placeholderTitle}>처방전을 촬영하세요</Text>
-            <Text style={styles.placeholderDesc}>
-              처방전을 촬영하면 자동으로{'\n'}약 정보를 인식합니다
-            </Text>
-
-            <View style={styles.buttonGroup}>
-              <TouchableOpacity style={styles.primaryButton} onPress={takePhoto}>
-                <Text style={styles.primaryButtonText}>카메라로 촬영</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity style={styles.secondaryButton} onPress={pickImage}>
-                <Text style={styles.secondaryButtonText}>갤러리에서 선택</Text>
-              </TouchableOpacity>
-            </View>
+        <View style={styles.placeholder}>
+          <View style={styles.placeholderIcon}>
+            <View style={styles.placeholderCamera} />
           </View>
-        ) : (
-          /* Image Preview State */
-          <View style={styles.preview}>
-            <Image source={{ uri: image }} style={styles.previewImage} resizeMode="contain" />
+          <Text style={styles.placeholderTitle}>처방전을 촬영하세요</Text>
+          <Text style={styles.placeholderDesc}>
+            처방전을 촬영하면 자동으로{'\n'}약 정보를 인식합니다
+          </Text>
 
-            <View style={styles.previewActions}>
-              <TouchableOpacity style={styles.retakeButton} onPress={resetImage}>
-                <Text style={styles.retakeButtonText}>다시 촬영</Text>
-              </TouchableOpacity>
+          <View style={styles.buttonGroup}>
+            <TouchableOpacity style={styles.primaryButton} onPress={handleCameraPress}>
+              <Text style={styles.primaryButtonText}>카메라로 촬영</Text>
+            </TouchableOpacity>
 
-              <TouchableOpacity
-                style={[styles.analyzeButton, loading && styles.analyzeButtonDisabled]}
-                onPress={analyzePrescription}
-                disabled={loading}
-              >
-                {loading ? (
-                  <ActivityIndicator color="#fff" size="small" />
-                ) : (
-                  <Text style={styles.analyzeButtonText}>분석하기</Text>
-                )}
-              </TouchableOpacity>
-            </View>
+            <TouchableOpacity style={styles.secondaryButton} onPress={handleGalleryPress}>
+              <Text style={styles.secondaryButtonText}>갤러리에서 선택</Text>
+            </TouchableOpacity>
           </View>
-        )}
+
+          <Text style={styles.comingSoonText}>* 카메라 기능은 준비 중입니다</Text>
+        </View>
       </View>
 
       {/* Tips */}
@@ -267,50 +190,10 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#1e293b',
   },
-  preview: {
-    flex: 1,
-    paddingTop: 20,
-  },
-  previewImage: {
-    flex: 1,
-    borderRadius: 14,
-    backgroundColor: '#e2e8f0',
-  },
-  previewActions: {
-    flexDirection: 'row',
-    gap: 12,
-    marginTop: 20,
-  },
-  retakeButton: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#fff',
-    paddingVertical: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-  },
-  retakeButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#64748b',
-  },
-  analyzeButton: {
-    flex: 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#1e293b',
-    paddingVertical: 16,
-    borderRadius: 12,
-  },
-  analyzeButtonDisabled: {
-    opacity: 0.7,
-  },
-  analyzeButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#fff',
+  comingSoonText: {
+    marginTop: 24,
+    fontSize: 13,
+    color: '#94a3b8',
   },
   tips: {
     paddingHorizontal: 20,
