@@ -93,6 +93,21 @@ cd TimeToPill
 
 ### 2. Database Setup
 
+#### 방법 1: 덤프 파일로 한 번에 설정 (추천)
+
+```bash
+# 1. 데이터베이스 생성
+mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS timetopill CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+
+# 2. 덤프 파일 임포트 (모든 테이블 + 데이터 포함)
+mysql -u root -p timetopill < database/timetopill_dump.sql
+```
+
+> **덤프 파일 받기**: 덤프 파일은 용량이 커서 git에 포함되지 않습니다.
+> 팀원에게 `timetopill_dump.sql` 파일을 요청하여 `database/` 폴더에 넣으세요.
+
+#### 방법 2: SQL 파일 개별 실행 (개발용)
+
 ```sql
 -- MySQL 접속
 mysql -u root -p
@@ -101,27 +116,24 @@ mysql -u root -p
 CREATE DATABASE timetopill;
 USE timetopill;
 
--- 1단계: 기본 테이블 (의존성 없음)
+-- 1단계: 기본 테이블
 SOURCE database/users/01_users_table.sql;
 SOURCE database/symptoms/01_symptom_tables_ver_jm.sql;
 SOURCE database/safety/01_safety_tables.sql;
 
--- 2단계: 약품 데이터 (대용량 파일, git에 없음 - 팀원에게 요청)
+-- 2단계: 약품 데이터 (대용량, 별도 요청 필요)
 SOURCE database/drugs/drug_overview_ver_sy.sql;
 SOURCE database/drugs/dur_info_ver_sy.sql;
 SOURCE database/drugs/dur_combination_info_ver_sy.sql;
-SOURCE database/drugs/medicine_ver_sy.sql;
 
 -- 3단계: 의존 테이블
 SOURCE database/schedules/01_schedule_table.sql;
 
 -- 4단계: 초기 데이터
 SOURCE database/seeds/01_symptom_seeds_ver_jm.sql;
-SOURCE database/seeds/02_user_group_seeds.sql;
 ```
 
 > **참고**: `_ver_sy` 파일들은 용량이 커서 git에 포함되지 않습니다.
-> 팀원(soyeon)에게 파일을 요청하거나 원본 덤프 파일에서 추출하세요.
 
 ### 3. Backend Setup
 
@@ -209,14 +221,17 @@ npm run android
 ### Pills
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/pills/my` | 내 약 목록 |
-| POST | `/api/pills/my/{itemSeq}` | 약 추가 |
+| GET | `/api/pills/my` | 내 약 목록 (스케줄 정보 포함) |
+| POST | `/api/pills/my` | 약 추가 (스케줄 설정 포함) |
+| POST | `/api/pills/my/{itemSeq}` | 약 추가 (간단) |
+| PUT | `/api/pills/my/{itemSeq}/schedule` | 스케줄 수정 |
 | DELETE | `/api/pills/my/{itemSeq}` | 약 삭제 |
 
 ### Schedule
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/api/schedule/today` | 오늘의 복약 스케줄 |
+| GET | `/api/schedule/month?year=&month=` | 월별 복약 기록 (캘린더용) |
 | PUT | `/api/schedule/{id}/taken` | 복용 완료 처리 |
 
 ---
