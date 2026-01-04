@@ -1,5 +1,5 @@
 import api from './api';
-import { Pill, PillSchedule, DrugSearchDto, PillWarning } from '../types';
+import { Pill, PillSchedule, DrugSearchDto, PillWarning, PillScheduleRequest } from '../types';
 
 // DrugSearchDto → Pill 변환 함수
 function convertToUIPill(dto: DrugSearchDto): Pill {
@@ -55,10 +55,20 @@ export const pillService = {
     return response.data;
   },
 
-  // [수정 4] 내 약통 추가 (ID 타입: string)
+  // [수정 4] 내 약통 추가 (ID 타입: string) - 간단 추가
   async addPill(itemSeq: string): Promise<void> {
     // 백엔드 PillController: @PostMapping("/api/pills/my/{itemSeq}")
     await api.post(`/pills/my/${itemSeq}`);
+  },
+
+  // [추가] 내 약통 추가 (스케줄 설정 포함)
+  async addPillWithSchedule(request: PillScheduleRequest): Promise<void> {
+    await api.post('/pills/my', request);
+  },
+
+  // [추가] 스케줄 수정
+  async updateSchedule(itemSeq: string, request: Omit<PillScheduleRequest, 'itemSeq'>): Promise<void> {
+    await api.put(`/pills/my/${itemSeq}/schedule`, request);
   },
 
   // [수정 5] 내 약통 삭제 (ID 타입: string)

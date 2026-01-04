@@ -64,14 +64,9 @@ export default function SearchScreen({ navigation }: Props) {
     }
   };
 
-  const handleAddPill = async (pill: Pill) => {
-    try {
-      await pillService.addPill(pill.itemSeq);
-      Alert.alert('추가 완료', `${pill.name}이(가) 내 약 목록에 추가되었습니다.`);
-    } catch (error) {
-      console.log('약 추가 실패:', error);
-      Alert.alert('추가 실패', '약을 추가하는데 실패했습니다. 다시 시도해주세요.');
-    }
+  const handleAddPill = (pill: Pill) => {
+    // 스케줄 설정 화면으로 이동
+    navigation.navigate('AddPillSchedule', { pill });
   };
 
   const clearSearch = () => {
