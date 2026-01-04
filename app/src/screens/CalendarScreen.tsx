@@ -48,38 +48,28 @@ export default function CalendarScreen({ navigation }: Props) {
   }, [currentDate]);
 
   const loadMonthRecords = async () => {
-    // TODO: 백엔드 API 연동 시 실제 데이터 로드
-    // 현재는 더미 데이터 생성
     const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const month = currentDate.getMonth() + 1; // API는 1-12월 기준
 
-    // 샘플 약 목록
-    const samplePills = [
-      { id: 1, name: '타이레놀 500mg', time: 'morning' as const },
-      { id: 2, name: '오메가3', time: 'morning' as const },
-      { id: 3, name: '비타민D', time: 'afternoon' as const },
-      { id: 4, name: '유산균', time: 'evening' as const },
-    ];
-
-    const dummyRecords: Record<string, DayRecord> = {};
-    for (let day = 1; day <= daysInMonth; day++) {
-      const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-      const today = new Date();
-      const checkDate = new Date(year, month, day);
-
-      // 과거 날짜만 기록 생성
-      if (checkDate <= today) {
-        // 각 약에 대해 랜덤하게 복용 여부 결정
-        const pills: PillRecord[] = samplePills.map(p => ({
-          ...p,
-          taken: Math.random() > 0.3, // 70% 확률로 복용
-        }));
-        const taken = pills.filter(p => p.taken).length;
-        dummyRecords[dateStr] = { date: dateStr, total: pills.length, taken, pills };
+    try {
+      const data = await pillService.getMonthRecords(year, month);
+      // API 응답을 Record<string, DayRecord> 형태로 변환
+      const formattedRecords: Record<string, DayRecord> = {};
+      if (data && typeof data === 'object') {
+        Object.entries(data).forEach(([dateStr, record]: [string, any]) => {
+          formattedRecords[dateStr] = {
+            date: dateStr,
+            total: record.total || 0,
+            taken: record.taken || 0,
+            pills: record.pills || [],
+          };
+        });
       }
+      setRecords(formattedRecords);
+    } catch (error) {
+      console.log('월별 기록 로드 실패:', error);
+      setRecords({});
     }
-    setRecords(dummyRecords);
   };
 
   const getDaysInMonth = (date: Date) => {

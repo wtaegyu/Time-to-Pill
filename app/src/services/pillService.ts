@@ -73,6 +73,12 @@ export const pillService = {
     return response.data;
   },
 
+  // [추가] 월별 복약 기록 조회
+  async getMonthRecords(year: number, month: number): Promise<any> {
+    const response = await api.get(`/schedule/month?year=${year}&month=${month}`);
+    return response.data;
+  },
+
   // [유지] 복용 완료 체크 (스케줄 ID는 number)
   async markAsTaken(scheduleId: number): Promise<void> {
     await api.put(`/schedule/${scheduleId}/taken`);

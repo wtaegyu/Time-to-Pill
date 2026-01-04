@@ -41,24 +41,8 @@ export default function SearchScreen({ navigation }: Props) {
       const data = await pillService.searchByName(searchQuery);
       setResults(data);
     } catch (error) {
-      setResults([
-        {
-          itemSeq: '1',
-          name: '타이레놀 500mg',
-          entpName: '한국존슨앤드존슨',
-          description: '해열진통제',
-          dosage: '1정',
-          warnings: [],
-        },
-        {
-          itemSeq: '2',
-          name: '게보린',
-          entpName: '삼진제약',
-          description: '두통, 치통, 생리통 등',
-          dosage: '1정',
-          warnings: [{ type: 'drowsiness', message: '졸음 유발' }],
-        },
-      ]);
+      console.log('검색 실패:', error);
+      setResults([]);
     } finally {
       setLoading(false);
     }
@@ -73,16 +57,8 @@ export default function SearchScreen({ navigation }: Props) {
       const data = await pillService.searchBySymptom(tag);
       setResults(data);
     } catch (error) {
-      setResults([
-        {
-          itemSeq: '1',
-          name: '타이레놀 500mg',
-          entpName: '한국존슨앤드존슨',
-          description: '해열진통제',
-          dosage: '1정',
-          warnings: [],
-        },
-      ]);
+      console.log('증상 검색 실패:', error);
+      setResults([]);
     } finally {
       setLoading(false);
     }
@@ -93,7 +69,8 @@ export default function SearchScreen({ navigation }: Props) {
       await pillService.addPill(pill.itemSeq);
       Alert.alert('추가 완료', `${pill.name}이(가) 내 약 목록에 추가되었습니다.`);
     } catch (error) {
-      Alert.alert('추가 완료', `${pill.name}이(가) 내 약 목록에 추가되었습니다.`);
+      console.log('약 추가 실패:', error);
+      Alert.alert('추가 실패', '약을 추가하는데 실패했습니다. 다시 시도해주세요.');
     }
   };
 
