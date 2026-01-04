@@ -5,17 +5,12 @@
 ## Features
 
 - 회원가입/로그인 (일반 로그인, Google OAuth)
-- 약 검색 및 등록
+- 약 검색 (이름 검색, 증상 검색)
+- 증상 매핑 알고리즘 (오타 교정, 유사어 인식)
 - 복약 스케줄 관리 (아침/점심/저녁)
-- 복약 알림 설정
-- 복약 통계 확인
+- 복약 캘린더 (월별 복용 기록 확인)
+- 처방전 스캔 (카메라/갤러리)
 - 마이페이지 (프로필, 설정)
-
-## Screenshots
-
-| 로그인 | 홈 | 검색 | 마이페이지 |
-|--------|-----|------|-----------|
-| 로그인/회원가입 | 복약 현황 | 약 검색 | 설정 |
 
 ## Tech Stack
 
@@ -46,21 +41,18 @@
 TimeToPill/
 ├── app/                          # Frontend (React Native + Expo)
 │   └── src/
-│       ├── screens/              # UI screens
+│       ├── screens/
 │       │   ├── LoginScreen.tsx
 │       │   ├── RegisterScreen.tsx
 │       │   ├── HomeScreen.tsx
 │       │   ├── SearchScreen.tsx
+│       │   ├── CalendarScreen.tsx    # 복약 캘린더
+│       │   ├── CameraScreen.tsx      # 처방전 스캔
 │       │   ├── MyPageScreen.tsx
-│       │   ├── NotificationSettingsScreen.tsx
-│       │   ├── ChangePasswordScreen.tsx
-│       │   ├── StatisticsScreen.tsx
-│       │   ├── HelpScreen.tsx
-│       │   └── AppInfoScreen.tsx
+│       │   └── ...
 │       ├── services/             # API calls
 │       ├── types/                # TypeScript types
-│       ├── navigation/           # Navigation config
-│       └── utils/                # Utilities and constants
+│       └── navigation/           # Navigation config
 │
 ├── backend/                      # Backend (Spring Boot)
 │   └── src/main/java/com/timetopill/
@@ -69,12 +61,21 @@ TimeToPill/
 │       ├── repository/           # Data access layer
 │       ├── entity/               # JPA entities
 │       ├── dto/                  # Request/Response objects
-│       └── config/               # Configuration
+│       ├── config/               # Configuration
+│       └── symptommapper/        # 증상 매핑 알고리즘
+│           ├── domain/           # Symptom, SymptomAlias 엔티티
+│           ├── mapping/          # 매핑 로직 (Fuzzy, Trigram 등)
+│           ├── repository/       # 증상 관련 Repository
+│           └── service/          # MappingService
 │
 ├── database/                     # Database
-│   ├── DATABASE_SPEC.md          # Table specifications
-│   ├── migrations/               # SQL migration files
-│   └── README.md                 # Database collaboration guide
+│   ├── users/                    # 사용자 테이블
+│   ├── drugs/                    # 약품 데이터 (대용량, git 제외)
+│   ├── symptoms/                 # 증상 매핑 테이블
+│   ├── safety/                   # 약품 안전성 테이블
+│   ├── schedules/                # 복약 스케줄 테이블
+│   ├── seeds/                    # 초기 데이터
+│   └── README.md                 # 데이터베이스 가이드
 │
 └── README.md
 ```
@@ -86,37 +87,51 @@ TimeToPill/
 ### 1. Clone Repository
 
 ```bash
-git clone https://github.com/your-username/TimeToPill.git
+git clone https://github.com/wtaegyu/Time-to-Pill.git
 cd TimeToPill
 ```
 
 ### 2. Database Setup
 
-```bash
-# MySQL 접속
+```sql
+-- MySQL 접속
 mysql -u root -p
 
-# 데이터베이스 생성 및 스키마 적용
+-- 데이터베이스 생성
 CREATE DATABASE timetopill;
 USE timetopill;
-SOURCE database/migrations/V001_init_schema.sql;
-SOURCE database/migrations/V002_create_pills_table.sql;
-SOURCE database/migrations/V003_create_pill_warnings_table.sql;
-SOURCE database/migrations/V004_create_user_pills_table.sql;
-SOURCE database/migrations/V005_create_schedules_table.sql;
-SOURCE database/migrations/V006_add_provider_column.sql;
+
+-- 1단계: 기본 테이블 (의존성 없음)
+SOURCE database/users/01_users_table.sql;
+SOURCE database/symptoms/01_symptom_tables_ver_jm.sql;
+SOURCE database/safety/01_safety_tables.sql;
+
+-- 2단계: 약품 데이터 (대용량 파일, git에 없음 - 팀원에게 요청)
+SOURCE database/drugs/drug_overview_ver_sy.sql;
+SOURCE database/drugs/dur_info_ver_sy.sql;
+SOURCE database/drugs/dur_combination_info_ver_sy.sql;
+SOURCE database/drugs/medicine_ver_sy.sql;
+
+-- 3단계: 의존 테이블
+SOURCE database/schedules/01_schedule_table.sql;
+
+-- 4단계: 초기 데이터
+SOURCE database/seeds/01_symptom_seeds_ver_jm.sql;
+SOURCE database/seeds/02_user_group_seeds.sql;
 ```
+
+> **참고**: `_ver_sy` 파일들은 용량이 커서 git에 포함되지 않습니다.
+> 팀원(soyeon)에게 파일을 요청하거나 원본 덤프 파일에서 추출하세요.
 
 ### 3. Backend Setup
 
-> **환경변수 설정**: `backend/.env.example` 파일을 복사하여 `.env` 파일을 만들고 값을 채워주세요.
-> 실제 값은 팀원에게 별도로 전달받으세요.
+> **환경변수 설정**: `backend/.env.example` 파일을 복사하여 값을 채워주세요.
 
 **PowerShell:**
 ```powershell
 cd backend
 
-# .env 파일의 환경변수 설정
+# 환경변수 설정
 $env:DB_PASSWORD="your_mysql_password"
 $env:GOOGLE_CLIENT_ID="your_google_client_id"
 $env:GOOGLE_CLIENT_SECRET="your_google_client_secret"
@@ -129,12 +144,10 @@ $env:GOOGLE_CLIENT_SECRET="your_google_client_secret"
 ```cmd
 cd backend
 
-# .env 파일의 환경변수 설정
 set DB_PASSWORD=your_mysql_password
 set GOOGLE_CLIENT_ID=your_google_client_id
 set GOOGLE_CLIENT_SECRET=your_google_client_secret
 
-# 실행
 gradlew bootRun
 ```
 
@@ -142,8 +155,7 @@ gradlew bootRun
 
 ### 4. Frontend Setup
 
-**PowerShell:**
-```powershell
+```bash
 cd app
 
 # 의존성 설치
@@ -152,82 +164,29 @@ npm install
 # Expo 개발 서버 시작
 npm start
 
-# 또는 Android 직접 실행
-npm run android
-```
-
-**CMD:**
-```cmd
-cd app
-
-# 의존성 설치
-npm install
-
-# Expo 개발 서버 시작
-npm start
-
-# 또는 Android 직접 실행
+# Android 직접 실행
 npm run android
 ```
 
 ---
 
-## Database Schema
+## Database Files
 
-```mermaid
-erDiagram
-    users ||--o{ user_pills : has
-    users ||--o{ schedules : has
-    pills ||--o{ user_pills : belongs_to
-    pills ||--o{ schedules : belongs_to
-    pills ||--o{ pill_warnings : has
+### 파일 네이밍 규칙
 
-    users {
-        bigint id PK
-        varchar username UK
-        varchar password
-        varchar nickname UK
-        int age
-        enum gender
-        enum provider
-        timestamp created_at
-        timestamp updated_at
-    }
+| 접미사 | 출처 | 설명 |
+|--------|------|------|
+| `_ver_sy` | soyeon | 약품 데이터 (덤프 파일에서 추출) |
+| `_ver_jm` | symptom_search_logic | 증상 매핑 알고리즘 관련 |
 
-    pills {
-        bigint id PK
-        varchar name
-        text description
-        varchar dosage
-        varchar image_url
-        timestamp created_at
-    }
+### 대용량 파일 (git 제외)
 
-    pill_warnings {
-        bigint id PK
-        bigint pill_id FK
-        enum warning_type
-        text message
-    }
-
-    user_pills {
-        bigint id PK
-        bigint user_id FK
-        bigint pill_id FK
-        timestamp created_at
-    }
-
-    schedules {
-        bigint id PK
-        bigint user_id FK
-        bigint pill_id FK
-        enum schedule_time
-        date schedule_date
-        boolean taken
-        timestamp taken_at
-        timestamp created_at
-    }
-```
+| 파일 | 크기 | 데이터 |
+|------|------|--------|
+| `drug_overview_ver_sy.sql` | 12 MB | 약품 기본 정보 (~44,000건) |
+| `dur_info_ver_sy.sql` | 7.5 MB | 단일 금기 정보 (~23,000건) |
+| `dur_combination_info_ver_sy.sql` | 217 MB | 병용금기 정보 (~837,000건) |
+| `medicine_ver_sy.sql` | 1,005 MB | 약품 상세 정보 (~44,000건) |
 
 ---
 
@@ -239,18 +198,20 @@ erDiagram
 | POST | `/api/auth/register` | 회원가입 |
 | POST | `/api/auth/login` | 로그인 |
 | POST | `/api/auth/google` | Google OAuth 로그인 |
-| GET | `/api/auth/check-nickname` | 닉네임 중복 확인 |
-| PUT | `/api/auth/password` | 비밀번호 변경 |
+
+### Search
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/search?keyword=` | 약 이름으로 검색 |
+| GET | `/api/search/symptom?keyword=` | 증상으로 검색 (매핑 적용) |
+| GET | `/api/search/{itemSeq}` | 약 상세 정보 |
 
 ### Pills
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/pills/search` | 약 이름으로 검색 |
-| GET | `/api/pills/search/symptom` | 증상으로 검색 |
-| GET | `/api/pills/{id}` | 약 상세 정보 |
 | GET | `/api/pills/my` | 내 약 목록 |
-| POST | `/api/pills/my/{id}` | 약 추가 |
-| DELETE | `/api/pills/my/{id}` | 약 삭제 |
+| POST | `/api/pills/my/{itemSeq}` | 약 추가 |
+| DELETE | `/api/pills/my/{itemSeq}` | 약 삭제 |
 
 ### Schedule
 | Method | Endpoint | Description |
@@ -269,12 +230,21 @@ erDiagram
 | `DB_NAME` | timetopill | 데이터베이스 이름 |
 | `DB_USERNAME` | root | 데이터베이스 사용자 |
 | `DB_PASSWORD` | - | 데이터베이스 비밀번호 |
-| `GOOGLE_CLIENT_ID` | - | Google OAuth Client ID (백엔드용) |
+| `GOOGLE_CLIENT_ID` | - | Google OAuth Client ID |
 | `GOOGLE_CLIENT_SECRET` | - | Google OAuth Client Secret |
 
 ---
 
 ## Troubleshooting
+
+### 백엔드 시작 실패
+
+**증상 테이블 관련 경고가 나오는 경우:**
+- 정상입니다. 증상 테이블이 없어도 앱은 동작합니다.
+- 증상 검색은 기본 LIKE 검색으로 폴백됩니다.
+
+**API 키 관련 오류:**
+- `api.service-key` 환경변수가 없어도 앱은 시작됩니다.
 
 ### MySQL 연결 실패
 1. MySQL 서버 실행 확인
@@ -287,17 +257,22 @@ erDiagram
 
 ### Gradle 빌드 오류
 
-**PowerShell:**
-```powershell
+```bash
 cd backend
 ./gradlew clean build --refresh-dependencies
 ```
 
-**CMD:**
-```cmd
-cd backend
-gradlew clean build --refresh-dependencies
-```
+---
+
+## App Screens
+
+| 화면 | 설명 |
+|------|------|
+| Home | 오늘의 복약 현황, 아침/점심/저녁 탭 |
+| Search | 약 검색 (이름, 증상 태그) |
+| Camera | 처방전 촬영/갤러리 선택 |
+| Calendar | 월별 복약 기록, 복용률 통계 |
+| MyPage | 프로필, 알림 설정, 비밀번호 변경 |
 
 ---
 
