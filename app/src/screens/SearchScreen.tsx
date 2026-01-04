@@ -43,15 +43,17 @@ export default function SearchScreen({ navigation }: Props) {
     } catch (error) {
       setResults([
         {
-          id: 1,
+          itemSeq: '1',
           name: '타이레놀 500mg',
+          entpName: '한국존슨앤드존슨',
           description: '해열진통제',
           dosage: '1정',
           warnings: [],
         },
         {
-          id: 2,
+          itemSeq: '2',
           name: '게보린',
+          entpName: '삼진제약',
           description: '두통, 치통, 생리통 등',
           dosage: '1정',
           warnings: [{ type: 'drowsiness', message: '졸음 유발' }],
@@ -73,8 +75,9 @@ export default function SearchScreen({ navigation }: Props) {
     } catch (error) {
       setResults([
         {
-          id: 1,
+          itemSeq: '1',
           name: '타이레놀 500mg',
+          entpName: '한국존슨앤드존슨',
           description: '해열진통제',
           dosage: '1정',
           warnings: [],
@@ -87,7 +90,7 @@ export default function SearchScreen({ navigation }: Props) {
 
   const handleAddPill = async (pill: Pill) => {
     try {
-      await pillService.addPill(pill.id);
+      await pillService.addPill(pill.itemSeq);
       Alert.alert('추가 완료', `${pill.name}이(가) 내 약 목록에 추가되었습니다.`);
     } catch (error) {
       Alert.alert('추가 완료', `${pill.name}이(가) 내 약 목록에 추가되었습니다.`);
@@ -214,7 +217,7 @@ export default function SearchScreen({ navigation }: Props) {
         /* Search Results */
         <FlatList
           data={results}
-          keyExtractor={(item) => item.id.toString()}
+          keyExtractor={(item) => item.itemSeq}
           contentContainerStyle={styles.resultsList}
           renderItem={renderResultItem}
           showsVerticalScrollIndicator={false}

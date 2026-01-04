@@ -7,10 +7,31 @@ export interface User {
   gender: 'M' | 'F';
 }
 
-// Pill types
+// Backend API response types (DrugSearchDto)
+export interface DrugSearchDto {
+  itemSeq: string;
+  itemName: string;
+  entpName: string;
+  efficacy: string;
+  useMethod: string;
+  precautionData: string;
+  itemImage: string | null;
+  durInfoList: DurInfo[];
+}
+
+export interface DurInfo {
+  id: number;
+  itemCode: string;
+  durType: string;
+  durTypeName: string;
+  durInfo: string;
+}
+
+// Pill types (UI용, DrugSearchDto에서 변환)
 export interface Pill {
   itemSeq: string;
   name: string;
+  entpName: string;
   description: string;
   dosage: string;
   warnings: PillWarning[];
