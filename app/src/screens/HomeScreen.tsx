@@ -61,50 +61,8 @@ export default function HomeScreen({ navigation }: Props) {
       const data = await pillService.getTodaySchedule();
       setSchedules(data);
     } catch (error) {
-      setSchedules([
-        {
-          id: 1,
-          pillId: 1,
-          pill: {
-            id: 1,
-            name: '타이레놀',
-            description: '해열진통제',
-            dosage: '1정',
-            warnings: [],
-          },
-          time: 'morning',
-          taken: false,
-          date: new Date().toISOString(),
-        },
-        {
-          id: 2,
-          pillId: 2,
-          pill: {
-            id: 2,
-            name: '게보린',
-            description: '두통약',
-            dosage: '1정',
-            warnings: [{ type: 'drowsiness', message: '졸음 유발 가능' }],
-          },
-          time: 'morning',
-          taken: true,
-          date: new Date().toISOString(),
-        },
-        {
-          id: 3,
-          pillId: 3,
-          pill: {
-            id: 3,
-            name: '비타민C',
-            description: '영양제',
-            dosage: '1정',
-            warnings: [],
-          },
-          time: 'afternoon',
-          taken: false,
-          date: new Date().toISOString(),
-        },
-      ]);
+      // API 실패 시 빈 배열
+      setSchedules([]);
     }
   };
 
@@ -119,9 +77,8 @@ export default function HomeScreen({ navigation }: Props) {
       await pillService.markAsTaken(scheduleId);
       loadSchedules();
     } catch (error) {
-      setSchedules((prev) =>
-        prev.map((s) => (s.id === scheduleId ? { ...s, taken: !s.taken } : s))
-      );
+      // API 실패 시 무시
+      console.log('복용 체크 실패:', error);
     }
   };
 
