@@ -27,6 +27,11 @@ public class MappingService {
     private final PostProcessor postProcessor = new PostProcessor(true, 0.8);
 
     public List<MatchResult> mapSymptoms(String rawQuery) {
+        // 캐시가 비어있으면 빈 결과 반환 (테이블 미생성 상태)
+        if (symptomMapper.isCacheEmpty()) {
+            return new ArrayList<>();
+        }
+
         // 1) preprocess
         String pre = Preprocessor.preprocess(rawQuery);
 
@@ -34,7 +39,12 @@ public class MappingService {
         List<String> chunks = inputParser.parse(pre);
 
         // 3) typo rules load
-        List<TypoCorrection> typoRules = typoCorrectionRepository.findByActiveTrueOrderByPriorityDesc();
+        List<TypoCorrection> typoRules;
+        try {
+            typoRules = typoCorrectionRepository.findByActiveTrueOrderByPriorityDesc();
+        } catch (Exception e) {
+            typoRules = new ArrayList<>();
+        }
 
         // 4) mapping + logging candidates
         List<MatchResult> accepted = new ArrayList<>();
@@ -45,9 +55,13 @@ public class MappingService {
             MapAttempt attempt = symptomMapper.mapOneWithBestGuess(chunk, candidates);
             attempt.accepted().ifPresent(accepted::add);
 
-            // 실패 or 낮은 점수 -> 로깅
+            // 실패 or 낮은 점수 -> 로깅 (테이블 없으면 스킵)
             if (attempt.accepted().isEmpty()) {
-                saveUnmapped(chunk, attempt, candidates);
+                try {
+                    saveUnmapped(chunk, attempt, candidates);
+                } catch (Exception e) {
+                    // 로깅 실패는 무시
+                }
             }
         }
 

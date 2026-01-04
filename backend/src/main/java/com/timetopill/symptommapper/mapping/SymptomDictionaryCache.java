@@ -7,10 +7,12 @@ import com.timetopill.symptommapper.repository.SymptomRepository;
 import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class SymptomDictionaryCache {
@@ -26,6 +28,16 @@ public class SymptomDictionaryCache {
 
     @PostConstruct
     public void load() {
+        try {
+            loadFromDatabase();
+            log.info("SymptomDictionaryCache 로드 완료: 증상 {}개, 별칭 {}개", symptomById.size(), entries.size() - symptomById.size());
+        } catch (Exception e) {
+            log.warn("SymptomDictionaryCache 로드 실패 (테이블이 없거나 비어있음): {}", e.getMessage());
+            log.warn("증상 매핑 기능이 비활성화됩니다. 증상 테이블 생성 후 앱을 재시작하세요.");
+        }
+    }
+
+    private void loadFromDatabase() {
         List<Symptom> symptoms = symptomRepo.findByActiveTrue();
         List<SymptomAlias> aliases = aliasRepo.findByActiveTrue();
 
@@ -63,6 +75,10 @@ public class SymptomDictionaryCache {
             }
         }
         this.trigramIndex = idx;
+    }
+
+    public boolean isEmpty() {
+        return symptomById.isEmpty();
     }
 
     public record SymptomRef(Long id, String code, String displayNameKo) {}
