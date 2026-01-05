@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -13,6 +13,8 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { Pill, Frequency, TimeSlot, PillScheduleRequest } from '../types';
 import { pillService } from '../services/pillService';
+import { calendarService } from '../services/calendarService';
+import { authService } from '../services/authService';
 
 type Props = {
   navigation: NativeStackNavigationProp<any>;
@@ -64,6 +66,16 @@ export default function AddPillScheduleScreen({ navigation, route }: Props) {
   const [customDays, setCustomDays] = useState<string[]>([]);
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>(['MORNING']);
   const [loading, setLoading] = useState(false);
+  const [hasGoogleLinked, setHasGoogleLinked] = useState(false);
+
+  useEffect(() => {
+    checkGoogleLink();
+  }, []);
+
+  const checkGoogleLink = async () => {
+    const user = await authService.getCurrentUser();
+    setHasGoogleLinked(user?.hasGoogleLinked || false);
+  };
 
   const toggleDay = (day: string) => {
     if (customDays.includes(day)) {
@@ -101,7 +113,27 @@ export default function AddPillScheduleScreen({ navigation, route }: Props) {
       };
 
       await pillService.addPillWithSchedule(request);
-      Alert.alert('등록 완료', `${pill.name}이(가) 등록되었습니다.`, [
+
+      // 구글 캘린더에 동기화 (연동되어 있는 경우)
+      if (hasGoogleLinked) {
+        try {
+          const schedules = timeSlots.map((slot) => ({
+            pillName: pill.name,
+            time: slot.toLowerCase() as 'morning' | 'afternoon' | 'evening',
+            date: formatDate(startDate),
+          }));
+          await calendarService.syncSchedulesToCalendar(schedules);
+        } catch (calendarError) {
+          console.log('캘린더 동기화 실패:', calendarError);
+          // 캘린더 동기화 실패해도 약 등록은 성공했으므로 진행
+        }
+      }
+
+      const message = hasGoogleLinked
+        ? `${pill.name}이(가) 등록되고 구글 캘린더에 동기화되었습니다.`
+        : `${pill.name}이(가) 등록되었습니다.`;
+
+      Alert.alert('등록 완료', message, [
         { text: '확인', onPress: () => navigation.navigate('Home') }
       ]);
     } catch (error) {

@@ -43,6 +43,12 @@ export const pillService = {
     return response.data.map(convertToUIPill);
   },
 
+  // [추가] 인기 약품 조회 (사용자들이 가장 많이 추가한 약)
+  async getPopularPills(limit: number = 5): Promise<Pill[]> {
+    const response = await api.get<DrugSearchDto[]>(`/search/popular?limit=${limit}`);
+    return response.data.map(convertToUIPill);
+  },
+
   // [수정 3] 약 상세 조회 (ID 타입: string, 주소: /search/{id})
   async getPillDetail(itemSeq: string): Promise<Pill> {
     const response = await api.get<DrugSearchDto>(`/search/${itemSeq}`);

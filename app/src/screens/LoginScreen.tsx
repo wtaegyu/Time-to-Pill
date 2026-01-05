@@ -18,8 +18,6 @@ import {
   statusCodes,
 } from '@react-native-google-signin/google-signin';
 import { authService } from '../services/authService';
-import api from '../services/api';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type Props = {
   navigation: NativeStackNavigationProp<any>;
@@ -45,27 +43,36 @@ export default function LoginScreen({ navigation }: Props) {
 
       if (isSuccessResponse(response)) {
         const { data } = response;
-        Alert.alert('Google 성공', `이메일: ${data.user.email}`);
 
         try {
-          const res = await api.post('/auth/google', {
-            email: data.user.email,
-            name: data.user.name,
-            googleId: data.user.id,
-          });
+          const res = await authService.googleLogin(
+            data.user.email || '',
+            data.user.name || '',
+            data.user.id
+          );
 
-          await AsyncStorage.setItem('token', res.data.token);
-          await AsyncStorage.setItem('user', JSON.stringify(res.data.user));
-
-          navigation.replace('Home');
+          // 프로필이 완성되지 않았으면 CompleteProfile 화면으로
+          if (!res.isProfileComplete) {
+            navigation.replace('CompleteProfile');
+          } else {
+            navigation.replace('Home');
+          }
         } catch (apiError: any) {
-          Alert.alert('서버 연결 실패', JSON.stringify(apiError.response?.data || apiError.message));
+          Alert.alert('로그인 실패', apiError.response?.data?.message || '서버 연결에 실패했습니다.');
         }
-      } else {
-        Alert.alert('Google 응답', JSON.stringify(response));
       }
     } catch (error: any) {
-      Alert.alert('Google 에러', `코드: ${error.code}\n메시지: ${error.message}`);
+      if (isErrorWithCode(error)) {
+        if (error.code === statusCodes.SIGN_IN_CANCELLED) {
+          // 사용자가 취소함 - 아무것도 하지 않음
+        } else if (error.code === statusCodes.IN_PROGRESS) {
+          Alert.alert('알림', '로그인 진행 중입니다.');
+        } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+          Alert.alert('오류', 'Google Play 서비스를 사용할 수 없습니다.');
+        } else {
+          Alert.alert('오류', '구글 로그인에 실패했습니다.');
+        }
+      }
     } finally {
       setLoading(false);
     }

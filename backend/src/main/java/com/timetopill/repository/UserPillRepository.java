@@ -14,6 +14,13 @@ public interface UserPillRepository extends JpaRepository<UserPill, Long> {
     // [추가] 이 한 줄을 추가해야 PillService의 에러가 사라집니다!
     List<UserPill> findByUserId(Long userId);
 
+    // 인기 약품 조회 (가장 많이 추가된 약 상위 N개)
+    @Query("SELECT up.drug.itemSeq as itemSeq, COUNT(up) as cnt " +
+           "FROM UserPill up " +
+           "GROUP BY up.drug.itemSeq " +
+           "ORDER BY cnt DESC")
+    List<Object[]> findPopularPillIds(org.springframework.data.domain.Pageable pageable);
+
     // [기존] 성능 최적화 버전 (JOIN FETCH)
     @Query("SELECT up FROM UserPill up JOIN FETCH up.drug WHERE up.user.id = :userId")
     List<UserPill> findByUserIdWithPill(@Param("userId") Long userId);

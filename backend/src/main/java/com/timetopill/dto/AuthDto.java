@@ -22,7 +22,8 @@ public class AuthDto {
     // 인증 응답
     public record AuthResponse(
         String token,
-        UserDto user
+        UserDto user,
+        boolean isProfileComplete
     ) {}
 
     // 닉네임 중복 확인 응답
@@ -43,7 +44,9 @@ public class AuthDto {
         String username,
         String nickname,
         Integer age,
-        String gender
+        String gender,
+        String provider,
+        boolean hasGoogleLinked
     ) {
         public static UserDto from(User user) {
             return new UserDto(
@@ -51,8 +54,35 @@ public class AuthDto {
                 user.getUsername(),
                 user.getNickname(),
                 user.getAge(),
-                user.getGender() != null ? user.getGender().name() : null
+                user.getGender() != null ? user.getGender().name() : null,
+                user.getProvider() != null ? user.getProvider().name() : "LOCAL",
+                user.getGoogleId() != null
             );
         }
     }
+
+    // 구글 계정 연결 요청
+    public record GoogleLinkRequest(
+        String googleId,
+        String email
+    ) {}
+
+    // 프로필 수정 요청
+    public record ProfileUpdateRequest(
+        String nickname,
+        Integer age,
+        String gender
+    ) {}
+
+    // 비밀번호 변경 요청
+    public record ChangePasswordRequest(
+        String currentPassword,
+        String newPassword
+    ) {}
+
+    // 일반 응답 메시지
+    public record MessageResponse(
+        boolean success,
+        String message
+    ) {}
 }

@@ -1,92 +1,108 @@
-# TimeToPill Database Schema
+# TimeToPill Database
 
 ## 폴더 구조
 
 ```
 database/
-├── users/          # 사용자 인증 관련
-├── drugs/          # 약품 정보 관련 (_ver_sy)
-├── symptoms/       # 증상 매핑 관련 (_ver_jm)
-├── safety/         # 약품 안전성 관련
-├── schedules/      # 복약 스케줄 관련
-├── seeds/          # 초기 데이터
-└── migrations/     # 기존 마이그레이션 (히스토리)
+├── README.md                 # 이 파일
+├── schema/                   # 테이블 스키마 정의
+│   ├── 01_users.sql         # 사용자 테이블
+│   ├── 02_pills.sql         # 약 및 스케줄 테이블
+│   └── 03_symptom_mapper.sql # 증상 매핑 테이블
+└── data/                     # 초기 데이터 (팀원별 작업)
+    ├── drug_overview_ver_sy.sql      # 약 개요 데이터 (소연)
+    ├── dur_info_ver_sy.sql           # DUR 정보 (소연)
+    ├── dur_combination_info_ver_sy.sql # DUR 병용금기 (소연)
+    ├── medicine_ver_sy.sql           # 의약품 데이터 (소연)
+    ├── symptom_tables_ver_jm.sql     # 증상 테이블 (지민)
+    └── symptom_seeds_ver_jm.sql      # 증상 데이터 (지민)
 ```
 
-## 파일 네이밍 규칙
+## 테이블 구조
 
-| 접미사 | 출처 | 설명 |
-|--------|------|------|
-| `_ver_sy` | soyeon | 약품 데이터 (덤프 파일에서 추출) |
-| `_ver_jm` | symptom_search_logic | 증상 매핑 알고리즘 관련 |
+### 1. 사용자 관련 (schema/01_users.sql)
+| 테이블 | 설명 |
+|--------|------|
+| `users` | 사용자 정보 (아이디, 비밀번호, 닉네임, 나이, 성별) |
 
----
+### 2. 약 및 스케줄 (schema/02_pills.sql)
+| 테이블 | 설명 |
+|--------|------|
+| `pills` | 사용자가 등록한 약 정보 |
+| `pill_warnings` | 약 경고 정보 |
+| `user_pills` | 사용자-약 연결 (복용 중인 약) |
+| `schedules` | 일별 복용 스케줄 |
 
-## 테이블 실행 순서
+### 3. 증상 매핑 (schema/03_symptom_mapper.sql)
+| 테이블 | 설명 |
+|--------|------|
+| `symptom` | 표준 증상 목록 |
+| `symptom_alias` | 증상 별칭 (사용자 입력 → 표준 증상) |
+| `typo_correction` | 오타 교정 규칙 |
+| `unmapped_term` | 매핑 실패 로그 |
 
-### 1단계: 기본 테이블 (의존성 없음)
+### 4. 약 데이터 (data/*_ver_sy.sql - 소연)
+| 테이블 | 설명 | 데이터 수 |
+|--------|------|----------|
+| `drug_overview` | 의약품 개요 (이름, 제조사, 효능, 용법) | ~44,000건 |
+| `dur_info` | DUR 정보 (약 금기 정보) | ~23,000건 |
+| `dur_combination_info` | DUR 병용금기 정보 | ~837,000건 |
+| `medicine` | 의약품 상세 정보 | ~44,000건 |
+
+## 초기 설정
+
+### 1. 데이터베이스 생성
 ```sql
-SOURCE users/01_users_table.sql;
-SOURCE symptoms/01_symptom_tables_ver_jm.sql;
-SOURCE safety/01_safety_tables.sql;
+CREATE DATABASE timetopill CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
-### 2단계: 약품 데이터 (큰 파일, git에 없음)
-```sql
-SOURCE drugs/drug_overview_ver_sy.sql;
-SOURCE drugs/dur_info_ver_sy.sql;
-SOURCE drugs/dur_combination_info_ver_sy.sql;
-SOURCE drugs/medicine_ver_sy.sql;
+### 2. 스키마 실행 (순서대로)
+```bash
+mysql -u root -p timetopill < database/schema/01_users.sql
+mysql -u root -p timetopill < database/schema/02_pills.sql
+mysql -u root -p timetopill < database/schema/03_symptom_mapper.sql
 ```
 
-### 3단계: 의존 테이블
-```sql
-SOURCE schedules/01_schedule_table.sql;
+### 3. 초기 데이터 로드
+```bash
+# 약 데이터 (소연)
+mysql -u root -p timetopill < database/data/drug_overview_ver_sy.sql
+mysql -u root -p timetopill < database/data/dur_info_ver_sy.sql
+mysql -u root -p timetopill < database/data/dur_combination_info_ver_sy.sql
+mysql -u root -p timetopill < database/data/medicine_ver_sy.sql
+
+# 증상 데이터 (지민)
+mysql -u root -p timetopill < database/data/symptom_tables_ver_jm.sql
+mysql -u root -p timetopill < database/data/symptom_seeds_ver_jm.sql
 ```
 
-### 4단계: 초기 데이터
-```sql
-SOURCE seeds/01_symptom_seeds_ver_jm.sql;
-SOURCE seeds/02_user_group_seeds.sql;
+## ERD (Entity Relationship)
+
+```
+users ─┬─< user_pills >─ pills ─< pill_warnings
+       │
+       └─< schedules >─ pills
+
+symptom ─< symptom_alias
+
+drug_overview ─< dur_info
+              ─< dur_combination_info
 ```
 
----
+## 팀원별 담당
 
-## 약품 데이터 (_ver_sy) 가져오기
+| 팀원 | 담당 테이블 | 파일 접미사 |
+|------|-------------|-------------|
+| 소연 | drug_overview, dur_info, dur_combination_info, medicine | `_ver_sy` |
+| 지민 | symptom, symptom_alias, typo_correction | `_ver_jm` |
+| 태규 | users, pills, schedules, user_pills | (schema 폴더) |
 
-**주의:** `_ver_sy` 파일들은 용량이 커서 git에 포함되지 않습니다.
+## 주의사항
 
-| 파일 | 크기 | 데이터 |
-|------|------|--------|
-| `drug_overview_ver_sy.sql` | 12 MB | 약품 기본 정보 (~44,000건) |
-| `dur_info_ver_sy.sql` | 7.5 MB | 단일 금기 정보 (~23,000건) |
-| `dur_combination_info_ver_sy.sql` | 217 MB | 병용금기 정보 (~837,000건) |
-| `medicine_ver_sy.sql` | 1,005 MB | 약품 상세 정보 (~44,000건) |
-
-### 데이터 얻는 방법
-1. 팀원(soyeon)에게 파일 요청
-2. 또는 원본 덤프 파일에서 추출
-
----
-
-## 테이블 목록
-
-| 폴더 | 파일 | 테이블 | 설명 |
-|------|------|--------|------|
-| users | 01_users_table | users | 사용자 인증 정보 |
-| drugs | drug_overview_ver_sy | drug_overview | 약품 기본 정보 |
-| drugs | dur_info_ver_sy | dur_info | 단일 약품 금기 정보 |
-| drugs | dur_combination_info_ver_sy | dur_combination_info | 병용금기 정보 |
-| drugs | medicine_ver_sy | medicine | 약품 정보 (이미지 포함) |
-| symptoms | 01_symptom_tables_ver_jm | symptom | 표준 증상 |
-| symptoms | 01_symptom_tables_ver_jm | symptom_alias | 증상 별칭/변형 |
-| symptoms | 01_symptom_tables_ver_jm | typo_correction | 오타 교정 |
-| symptoms | 01_symptom_tables_ver_jm | unmapped_term | 매핑 실패 로그 |
-| safety | 01_safety_tables | user_groups | 사용자 그룹 |
-| safety | 01_safety_tables | pill_safety | 약품별 안전 정보 |
-| schedules | 01_schedule_table | schedules | 복약 스케줄 |
-
----
+1. **스키마 변경 시**: `schema/` 폴더의 파일 수정 후 팀원에게 알림
+2. **데이터 추가 시**: 본인 담당 `_ver_XX` 파일에 추가
+3. **FK 순서**: users → pills → user_pills → schedules 순서로 생성
+4. **문자셋**: utf8mb4 사용 (이모지 지원)
 
 ## 유용한 명령어
 

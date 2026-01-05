@@ -7,8 +7,13 @@ import {
   ScrollView,
   Alert,
   StatusBar,
+  ActivityIndicator,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import {
+  GoogleSignin,
+  isSuccessResponse,
+} from '@react-native-google-signin/google-signin';
 import { authService } from '../services/authService';
 import { pillService } from '../services/pillService';
 import { User, Pill } from '../types';
@@ -20,10 +25,14 @@ type Props = {
 export default function MyPageScreen({ navigation }: Props) {
   const [user, setUser] = useState<User | null>(null);
   const [myPills, setMyPills] = useState<Pill[]>([]);
+  const [googleLinkLoading, setGoogleLinkLoading] = useState(false);
 
   useEffect(() => {
     loadUserData();
     loadMyPills();
+    GoogleSignin.configure({
+      webClientId: '329734818686-lni9h7e611qtkbec8f92fkef628dot8n.apps.googleusercontent.com',
+    });
   }, []);
 
   const loadUserData = async () => {
@@ -79,6 +88,61 @@ export default function MyPageScreen({ navigation }: Props) {
         },
       },
     ]);
+  };
+
+  const handleGoogleLink = async () => {
+    setGoogleLinkLoading(true);
+    try {
+      await GoogleSignin.hasPlayServices();
+      const response = await GoogleSignin.signIn();
+
+      if (isSuccessResponse(response)) {
+        const { data } = response;
+        const updatedUser = await authService.linkGoogle({
+          googleId: data.user.id,
+          email: data.user.email || '',
+        });
+        setUser(updatedUser);
+        Alert.alert('성공', '구글 계정이 연결되었습니다.');
+      }
+    } catch (error: any) {
+      if (error.response?.data?.message) {
+        Alert.alert('연결 실패', error.response.data.message);
+      } else if (error.code !== '-5') { // -5: SIGN_IN_CANCELLED
+        Alert.alert('오류', '구글 계정 연결에 실패했습니다.');
+      }
+    } finally {
+      setGoogleLinkLoading(false);
+    }
+  };
+
+  const handleGoogleUnlink = async () => {
+    Alert.alert(
+      '구글 연결 해제',
+      '구글 계정 연결을 해제하시겠습니까?\n구글 로그인을 사용할 수 없게 됩니다.',
+      [
+        { text: '취소', style: 'cancel' },
+        {
+          text: '해제',
+          style: 'destructive',
+          onPress: async () => {
+            setGoogleLinkLoading(true);
+            try {
+              const updatedUser = await authService.unlinkGoogle();
+              setUser(updatedUser);
+              Alert.alert('완료', '구글 계정 연결이 해제되었습니다.');
+            } catch (error: any) {
+              Alert.alert(
+                '해제 실패',
+                error.response?.data?.message || '연결 해제에 실패했습니다.'
+              );
+            } finally {
+              setGoogleLinkLoading(false);
+            }
+          },
+        },
+      ]
+    );
   };
 
   const menuItems = [
@@ -137,8 +201,47 @@ export default function MyPageScreen({ navigation }: Props) {
               <Text style={styles.statLabel}>성별</Text>
             </View>
           </View>
-          <TouchableOpacity style={styles.editProfileButton}>
+          <TouchableOpacity
+            style={styles.editProfileButton}
+            onPress={() => navigation.navigate('EditProfile')}
+          >
             <Text style={styles.editProfileText}>프로필 수정</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Google Link Section */}
+        <View style={styles.googleSection}>
+          <View style={styles.googleHeader}>
+            <Text style={styles.googleIcon}>G</Text>
+            <View style={styles.googleInfo}>
+              <Text style={styles.googleTitle}>구글 계정 연동</Text>
+              <Text style={styles.googleDesc}>
+                {user?.hasGoogleLinked
+                  ? '구글 계정이 연결되어 있습니다'
+                  : '구글 로그인 및 캘린더 동기화 사용'}
+              </Text>
+            </View>
+          </View>
+          <TouchableOpacity
+            style={[
+              styles.googleButton,
+              user?.hasGoogleLinked && styles.googleButtonLinked,
+            ]}
+            onPress={user?.hasGoogleLinked ? handleGoogleUnlink : handleGoogleLink}
+            disabled={googleLinkLoading}
+          >
+            {googleLinkLoading ? (
+              <ActivityIndicator size="small" color={user?.hasGoogleLinked ? '#dc2626' : '#fff'} />
+            ) : (
+              <Text
+                style={[
+                  styles.googleButtonText,
+                  user?.hasGoogleLinked && styles.googleButtonTextLinked,
+                ]}
+              >
+                {user?.hasGoogleLinked ? '연결 해제' : '연결하기'}
+              </Text>
+            )}
           </TouchableOpacity>
         </View>
 
@@ -415,6 +518,69 @@ const styles = StyleSheet.create({
   logoutText: {
     fontSize: 15,
     fontWeight: '600',
+    color: '#dc2626',
+  },
+  googleSection: {
+    marginHorizontal: 20,
+    marginBottom: 16,
+    padding: 16,
+    backgroundColor: '#fff',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  googleHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  googleIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#f8fafc',
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#4285f4',
+    textAlign: 'center',
+    lineHeight: 40,
+    marginRight: 12,
+  },
+  googleInfo: {
+    flex: 1,
+  },
+  googleTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#1e293b',
+    marginBottom: 2,
+  },
+  googleDesc: {
+    fontSize: 12,
+    color: '#64748b',
+  },
+  googleButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    backgroundColor: '#1e293b',
+    borderRadius: 8,
+    minWidth: 80,
+    alignItems: 'center',
+  },
+  googleButtonLinked: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#fecaca',
+  },
+  googleButtonText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#fff',
+  },
+  googleButtonTextLinked: {
     color: '#dc2626',
   },
 });

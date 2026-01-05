@@ -11,3 +11,6 @@ export { default as AppInfoScreen } from './AppInfoScreen';
 export { default as CalendarScreen } from './CalendarScreen';
 export { default as CameraScreen } from './CameraScreen';
 export { default as AddPillScheduleScreen } from './AddPillScheduleScreen';
+export { default as EditProfileScreen } from './EditProfileScreen';
+export { default as CompleteProfileScreen } from './CompleteProfileScreen';
+export { default as PillDetailScreen } from './PillDetailScreen';

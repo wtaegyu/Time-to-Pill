@@ -48,10 +48,8 @@ export default function ChangePasswordScreen({ navigation }: Props) {
       Alert.alert('완료', '비밀번호가 변경되었습니다.', [
         { text: '확인', onPress: () => navigation.goBack() },
       ]);
-    } catch (error) {
-      Alert.alert('완료', '비밀번호가 변경되었습니다.', [
-        { text: '확인', onPress: () => navigation.goBack() },
-      ]);
+    } catch (error: any) {
+      Alert.alert('오류', error.response?.data?.message || '비밀번호 변경에 실패했습니다.');
     } finally {
       setLoading(false);
     }

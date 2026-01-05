@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -20,13 +20,32 @@ type Props = {
 };
 
 const SYMPTOM_TAGS = ['두통', '소화불량', '감기', '알러지', '근육통', '수면장애', '피로', '관절통'];
-const POPULAR_PILLS = ['타이레놀', '게보린', '판피린', '베아제'];
 
 export default function SearchScreen({ navigation }: Props) {
   const [searchQuery, setSearchQuery] = useState('');
   const [results, setResults] = useState<Pill[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
+  const [popularPills, setPopularPills] = useState<Pill[]>([]);
+  const [loadingPopular, setLoadingPopular] = useState(true);
+
+  // 인기 약품 로드
+  useEffect(() => {
+    loadPopularPills();
+  }, []);
+
+  const loadPopularPills = async () => {
+    try {
+      setLoadingPopular(true);
+      const pills = await pillService.getPopularPills(5);
+      setPopularPills(pills);
+    } catch (error) {
+      console.log('인기 약품 로드 실패:', error);
+      // 실패해도 빈 배열로 처리
+    } finally {
+      setLoadingPopular(false);
+    }
+  };
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) {
@@ -167,22 +186,33 @@ export default function SearchScreen({ navigation }: Props) {
           {/* Popular Pills */}
           <View style={styles.popularSection}>
             <Text style={styles.sectionTitle}>인기 약품</Text>
-            <View style={styles.popularList}>
-              {POPULAR_PILLS.map((name, index) => (
-                <TouchableOpacity
-                  key={name}
-                  style={[
-                    styles.popularItem,
-                    index === POPULAR_PILLS.length - 1 && styles.popularItemLast,
-                  ]}
-                  onPress={() => handleTagSearch(name)}
-                >
-                  <Text style={styles.popularRank}>{index + 1}</Text>
-                  <Text style={styles.popularName}>{name}</Text>
-                  <Text style={styles.popularArrow}>›</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+            {loadingPopular ? (
+              <View style={styles.popularLoading}>
+                <ActivityIndicator size="small" color="#64748b" />
+                <Text style={styles.popularLoadingText}>로딩 중...</Text>
+              </View>
+            ) : popularPills.length > 0 ? (
+              <View style={styles.popularList}>
+                {popularPills.map((pill, index) => (
+                  <TouchableOpacity
+                    key={pill.itemSeq}
+                    style={[
+                      styles.popularItem,
+                      index === popularPills.length - 1 && styles.popularItemLast,
+                    ]}
+                    onPress={() => navigation.navigate('PillDetail', { pill })}
+                  >
+                    <Text style={styles.popularRank}>{index + 1}</Text>
+                    <Text style={styles.popularName} numberOfLines={1}>{pill.name}</Text>
+                    <Text style={styles.popularArrow}>›</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            ) : (
+              <View style={styles.popularEmpty}>
+                <Text style={styles.popularEmptyText}>아직 등록된 약이 없습니다</Text>
+              </View>
+            )}
           </View>
         </View>
       ) : (
@@ -376,6 +406,33 @@ const styles = StyleSheet.create({
   },
   popularArrow: {
     fontSize: 18,
+    color: '#94a3b8',
+  },
+  popularLoading: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    gap: 8,
+  },
+  popularLoadingText: {
+    fontSize: 14,
+    color: '#64748b',
+  },
+  popularEmpty: {
+    padding: 24,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    alignItems: 'center',
+  },
+  popularEmptyText: {
+    fontSize: 14,
     color: '#94a3b8',
   },
   resultsList: {

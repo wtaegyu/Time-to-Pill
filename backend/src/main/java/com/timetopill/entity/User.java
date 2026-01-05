@@ -33,6 +33,9 @@ public class User {
     @Column(length = 10)
     private AuthProvider provider = AuthProvider.LOCAL;
 
+    @Column(name = "google_id", unique = true)
+    private String googleId;  // 구글 사용자 ID (계정 연동용)
+
     public enum AuthProvider {
         LOCAL, GOOGLE
     }
@@ -85,6 +88,9 @@ public class User {
 
     public AuthProvider getProvider() { return provider; }
     public void setProvider(AuthProvider provider) { this.provider = provider; }
+
+    public String getGoogleId() { return googleId; }
+    public void setGoogleId(String googleId) { this.googleId = googleId; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }

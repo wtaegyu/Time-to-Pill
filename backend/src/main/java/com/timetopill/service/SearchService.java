@@ -5,10 +5,12 @@ import com.timetopill.entity.DrugOverview;
 import com.timetopill.entity.DurInfo;
 import com.timetopill.repository.DrugOverviewRepository;
 import com.timetopill.repository.DurInfoRepository;
+import com.timetopill.repository.UserPillRepository;
 import com.timetopill.symptommapper.mapping.MatchResult;
 import com.timetopill.symptommapper.service.MappingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +25,7 @@ public class SearchService {
 
     private final DrugOverviewRepository drugRepository;
     private final DurInfoRepository durInfoRepository;
+    private final UserPillRepository userPillRepository;
     private final MappingService mappingService;
 
     // 1. 이름 검색
@@ -76,6 +79,38 @@ public class SearchService {
                     .collect(Collectors.toList());
         } catch (Exception e) {
             log.error("❌ 증상 검색 중 치명적 에러 발생!", e);
+            throw e;
+        }
+    }
+
+    // 3. 인기 약품 조회 (사용자들이 가장 많이 추가한 약)
+    public List<DrugSearchDto> getPopularPills(int limit) {
+        try {
+            log.info("🔍 인기 약품 조회 시작 (상위 {}개)", limit);
+
+            // 가장 많이 추가된 약의 itemSeq 목록 조회
+            List<Object[]> popularIds = userPillRepository.findPopularPillIds(PageRequest.of(0, limit));
+
+            if (popularIds.isEmpty()) {
+                log.info("⚠️ 등록된 약이 없음, 빈 리스트 반환");
+                return Collections.emptyList();
+            }
+
+            // itemSeq로 약 상세 정보 조회 (순서 유지)
+            List<DrugSearchDto> result = new ArrayList<>();
+            for (Object[] row : popularIds) {
+                String itemSeq = (String) row[0];
+                Long count = (Long) row[1];
+                log.debug("  → {} (등록 수: {})", itemSeq, count);
+
+                drugRepository.findById(itemSeq)
+                        .ifPresent(drug -> result.add(convertToDto(drug)));
+            }
+
+            log.info("✅ 인기 약품 조회 완료: {}건", result.size());
+            return result;
+        } catch (Exception e) {
+            log.error("❌ 인기 약품 조회 중 에러 발생!", e);
             throw e;
         }
     }

@@ -16,11 +16,15 @@ import {
   CalendarScreen,
   CameraScreen,
   AddPillScheduleScreen,
+  EditProfileScreen,
+  CompleteProfileScreen,
+  PillDetailScreen,
 } from '../screens';
 
 export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
+  CompleteProfile: undefined;
   Home: undefined;
   Search: undefined;
   MyPage: undefined;
@@ -29,6 +33,7 @@ export type RootStackParamList = {
   AddPillSchedule: { pill: any };
   NotificationSettings: undefined;
   ChangePassword: undefined;
+  EditProfile: undefined;
   Statistics: undefined;
   Help: undefined;
   AppInfo: undefined;
@@ -65,6 +70,7 @@ export default function AppNavigator() {
         {/* Auth Screens */}
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Register" component={RegisterScreen} />
+        <Stack.Screen name="CompleteProfile" component={CompleteProfileScreen} />
 
         {/* Main Screens */}
         <Stack.Screen name="Home" component={HomeScreen} />
@@ -74,6 +80,7 @@ export default function AppNavigator() {
         {/* Settings Screens */}
         <Stack.Screen name="NotificationSettings" component={NotificationSettingsScreen} />
         <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
+        <Stack.Screen name="EditProfile" component={EditProfileScreen} />
         <Stack.Screen name="Statistics" component={StatisticsScreen} />
         <Stack.Screen name="Help" component={HelpScreen} />
         <Stack.Screen name="AppInfo" component={AppInfoScreen} />
@@ -82,6 +89,7 @@ export default function AppNavigator() {
         <Stack.Screen name="Calendar" component={CalendarScreen} />
         <Stack.Screen name="Camera" component={CameraScreen} />
         <Stack.Screen name="AddPillSchedule" component={AddPillScheduleScreen} />
+        <Stack.Screen name="PillDetail" component={PillDetailScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

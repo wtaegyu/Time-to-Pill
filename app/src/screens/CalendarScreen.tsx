@@ -6,9 +6,13 @@ import {
   StyleSheet,
   ScrollView,
   StatusBar,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { pillService } from '../services/pillService';
+import { calendarService } from '../services/calendarService';
+import { authService } from '../services/authService';
 
 type Props = {
   navigation: NativeStackNavigationProp<any>;
@@ -42,10 +46,18 @@ export default function CalendarScreen({ navigation }: Props) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [records, setRecords] = useState<Record<string, DayRecord>>({});
+  const [syncing, setSyncing] = useState(false);
+  const [hasGoogleLinked, setHasGoogleLinked] = useState(false);
 
   useEffect(() => {
     loadMonthRecords();
+    loadGoogleStatus();
   }, [currentDate]);
+
+  const loadGoogleStatus = async () => {
+    const user = await authService.getCurrentUser();
+    setHasGoogleLinked(user?.hasGoogleLinked || false);
+  };
 
   const loadMonthRecords = async () => {
     const year = currentDate.getFullYear();
@@ -69,6 +81,34 @@ export default function CalendarScreen({ navigation }: Props) {
     } catch (error) {
       console.log('월별 기록 로드 실패:', error);
       setRecords({});
+    }
+  };
+
+  const handleSyncToGoogle = async () => {
+    setSyncing(true);
+    try {
+      const schedules = Object.entries(records).flatMap(([date, record]) =>
+        record.pills.map((pill) => ({
+          pillName: pill.name,
+          time: pill.time,
+          date,
+        }))
+      );
+
+      if (schedules.length === 0) {
+        Alert.alert('알림', '동기화할 복약 스케줄이 없습니다.');
+        return;
+      }
+
+      const successCount = await calendarService.syncSchedulesToCalendar(schedules);
+      Alert.alert(
+        '동기화 완료',
+        `${successCount}개의 복약 스케줄이 구글 캘린더에 추가되었습니다.`
+      );
+    } catch (error: any) {
+      Alert.alert('동기화 실패', error.message || '구글 캘린더 동기화에 실패했습니다.');
+    } finally {
+      setSyncing(false);
     }
   };
 
@@ -177,6 +217,34 @@ export default function CalendarScreen({ navigation }: Props) {
             <Text style={styles.monthArrow}>›</Text>
           </TouchableOpacity>
         </View>
+
+        {/* Google Calendar Sync - 구글 로그인 시에만 표시 */}
+        {hasGoogleLinked && (
+          <View style={styles.syncCard}>
+            <View style={styles.syncHeader}>
+              <View style={styles.syncInfo}>
+                <Text style={styles.syncIcon}>G</Text>
+                <View>
+                  <Text style={styles.syncTitle}>구글 캘린더 동기화</Text>
+                  <Text style={styles.syncDesc}>
+                    복약 스케줄을 구글 캘린더에 추가합니다
+                  </Text>
+                </View>
+              </View>
+            </View>
+            <TouchableOpacity
+              style={[styles.syncButton, syncing && styles.syncButtonDisabled]}
+              onPress={handleSyncToGoogle}
+              disabled={syncing}
+            >
+              {syncing ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <Text style={styles.syncButtonText}>구글 캘린더에 동기화</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        )}
 
         {/* Month Stats */}
         <View style={styles.statsCard}>
@@ -596,5 +664,61 @@ const styles = StyleSheet.create({
   },
   pillStatusMissed: {
     color: '#ef4444',
+  },
+  syncCard: {
+    marginHorizontal: 20,
+    backgroundColor: '#fff',
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  syncHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  syncInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  syncIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#f8fafc',
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#4285f4',
+    textAlign: 'center',
+    lineHeight: 36,
+    marginRight: 12,
+  },
+  syncTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1e293b',
+    marginBottom: 2,
+  },
+  syncDesc: {
+    fontSize: 12,
+    color: '#64748b',
+  },
+  syncButton: {
+    backgroundColor: '#1e293b',
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  syncButtonDisabled: {
+    backgroundColor: '#94a3b8',
+  },
+  syncButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#fff',
   },
 });

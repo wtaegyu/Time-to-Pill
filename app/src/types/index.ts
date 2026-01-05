@@ -3,8 +3,10 @@ export interface User {
   id: number;
   username: string;
   nickname: string;
-  age: number;
-  gender: 'M' | 'F';
+  age?: number;
+  gender?: 'M' | 'F';
+  provider?: 'LOCAL' | 'GOOGLE';
+  hasGoogleLinked?: boolean;
 }
 
 // Backend API response types (DrugSearchDto)
@@ -96,4 +98,11 @@ export interface RegisterRequest {
 export interface AuthResponse {
   token: string;
   user: User;
+  isProfileComplete: boolean;
+}
+
+// Google Link types
+export interface GoogleLinkRequest {
+  googleId: string;
+  email: string;
 }
