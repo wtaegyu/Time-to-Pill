@@ -52,8 +52,8 @@ export default function MyPageScreen({ navigation }: Props) {
       setMyPills(pills);
     } catch (error) {
       setMyPills([
-        { id: 1, name: '타이레놀', description: '해열진통제', dosage: '1정', warnings: [] },
-        { id: 2, name: '게보린', description: '두통약', dosage: '1정', warnings: [] },
+        { itemSeq: '1', name: '타이레놀', entpName: '', description: '해열진통제', dosage: '1정', warnings: [] },
+        { itemSeq: '2', name: '게보린', entpName: '', description: '두통약', dosage: '1정', warnings: [] },
       ]);
     }
   };
@@ -80,10 +80,10 @@ export default function MyPageScreen({ navigation }: Props) {
         style: 'destructive',
         onPress: async () => {
           try {
-            await pillService.removePill(pill.id);
+            await pillService.removePill(pill.itemSeq);
             loadMyPills();
           } catch (error) {
-            setMyPills((prev) => prev.filter((p) => p.id !== pill.id));
+            setMyPills((prev) => prev.filter((p) => p.itemSeq !== pill.itemSeq));
           }
         },
       },
@@ -259,7 +259,7 @@ export default function MyPageScreen({ navigation }: Props) {
             </View>
           ) : (
             myPills.map((pill) => (
-              <View key={pill.id} style={styles.pillItem}>
+              <View key={pill.itemSeq} style={styles.pillItem}>
                 <View style={styles.pillDot} />
                 <View style={styles.pillInfo}>
                   <Text style={styles.pillName}>{pill.name}</Text>

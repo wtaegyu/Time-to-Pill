@@ -153,16 +153,38 @@ public class PillService {
 
         Frequency frequency = userPill.getFrequency() != null ? userPill.getFrequency() : Frequency.DAILY;
 
+        // 시간대 파싱 (MORNING,AFTERNOON,EVENING)
+        String[] timeSlots = userPill.getTimeSlots() != null
+                ? userPill.getTimeSlots().split(",")
+                : new String[]{"MORNING"};
+
         for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
             if (shouldCreateSchedule(date, frequency, userPill.getCustomDays(), startDate)) {
-                Schedule schedule = new Schedule();
-                schedule.setUser(user);
-                schedule.setDrug(drug);
-                schedule.setScheduleDate(date);
-                schedule.setTaken(false);
+                // 각 시간대별로 스케줄 생성
+                for (String timeSlot : timeSlots) {
+                    Schedule schedule = new Schedule();
+                    schedule.setUser(user);
+                    schedule.setDrug(drug);
+                    schedule.setScheduleDate(date);
+                    schedule.setScheduleTime(parseTimeSlot(timeSlot.trim()));
+                    schedule.setTaken(false);
 
-                scheduleRepository.save(schedule);
+                    scheduleRepository.save(schedule);
+                }
             }
+        }
+    }
+
+    // 시간대 문자열을 Enum으로 변환
+    private Schedule.TimeSlot parseTimeSlot(String timeSlot) {
+        switch (timeSlot.toUpperCase()) {
+            case "AFTERNOON":
+                return Schedule.TimeSlot.afternoon;
+            case "EVENING":
+                return Schedule.TimeSlot.evening;
+            case "MORNING":
+            default:
+                return Schedule.TimeSlot.morning;
         }
     }
 

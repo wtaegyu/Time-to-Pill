@@ -89,9 +89,11 @@ export default function HomeScreen({ navigation }: Props) {
   };
 
   const filteredSchedules = schedules.filter((s) => s.time === selectedTime);
-  const takenCount = filteredSchedules.filter((s) => s.taken).length;
-  const totalCount = filteredSchedules.length;
-  const progress = totalCount > 0 ? (takenCount / totalCount) * 100 : 0;
+
+  // 오늘의 복약 진행률 (전체 시간대 합산)
+  const totalTakenCount = schedules.filter((s) => s.taken).length;
+  const totalPillCount = schedules.length;
+  const progress = totalPillCount > 0 ? (totalTakenCount / totalPillCount) * 100 : 0;
 
   const today = new Date();
   const dateStr = `${today.getMonth() + 1}월 ${today.getDate()}일`;
@@ -120,13 +122,13 @@ export default function HomeScreen({ navigation }: Props) {
       <View style={styles.progressCard}>
         <View style={styles.progressHeader}>
           <Text style={styles.progressTitle}>오늘의 복약</Text>
-          <Text style={styles.progressCount}>{takenCount} / {totalCount}</Text>
+          <Text style={styles.progressCount}>{totalTakenCount} / {totalPillCount}</Text>
         </View>
         <View style={styles.progressBarBg}>
           <View style={[styles.progressBar, { width: `${progress}%` }]} />
         </View>
         <Text style={styles.progressText}>
-          {progress === 100 ? '모든 약을 복용했습니다' : `${totalCount - takenCount}개 남음`}
+          {progress === 100 ? '모든 약을 복용했습니다' : `${totalPillCount - totalTakenCount}개 남음`}
         </Text>
       </View>
 

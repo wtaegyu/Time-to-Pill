@@ -104,11 +104,17 @@ export default function SearchScreen({ navigation }: Props) {
         <View style={styles.pillDot} />
       </View>
       <View style={styles.resultInfo}>
-        <Text style={styles.resultName}>{item.name}</Text>
-        <Text style={styles.resultDesc}>{item.description}</Text>
+        <Text style={styles.resultName} numberOfLines={1} ellipsizeMode="tail">
+          {item.name}
+        </Text>
+        <Text style={styles.resultDesc} numberOfLines={2} ellipsizeMode="tail">
+          {item.description}
+        </Text>
         {item.warnings && item.warnings.length > 0 && (
           <View style={styles.warningBadge}>
-            <Text style={styles.warningText}>{item.warnings[0].message}</Text>
+            <Text style={styles.warningText} numberOfLines={1} ellipsizeMode="tail">
+              {item.warnings[0].message}
+            </Text>
           </View>
         )}
       </View>
@@ -471,6 +477,7 @@ const styles = StyleSheet.create({
   },
   resultInfo: {
     flex: 1,
+    marginRight: 10,
   },
   resultName: {
     fontSize: 15,
@@ -481,6 +488,7 @@ const styles = StyleSheet.create({
   resultDesc: {
     fontSize: 13,
     color: '#64748b',
+    lineHeight: 18,
   },
   warningBadge: {
     marginTop: 6,

@@ -55,10 +55,26 @@ export const pillService = {
     return convertToUIPill(response.data);
   },
 
-  // [유지] 내 약통 목록 조회
+  // [수정] 내 약통 목록 조회 - UserPillResponse를 Pill로 변환
   async getMyPills(): Promise<Pill[]> {
     const response = await api.get('/pills/my');
-    return response.data;
+    // 백엔드 UserPillResponse: { id, drug: DrugSearchDto, ... }
+    // 프론트엔드 Pill: { itemSeq, name, description, ... }
+    return response.data.map((item: any) => {
+      const drug = item.drug;
+      return {
+        itemSeq: drug.itemSeq,
+        name: drug.itemName,
+        entpName: drug.entpName || '',
+        description: drug.efficacy || '',
+        dosage: drug.useMethod || '',
+        warnings: (drug.durInfoList || []).map((dur: any) => ({
+          type: 'interaction' as const,
+          message: dur.durInfo || dur.durTypeName || '주의 필요',
+        })),
+        imageUrl: drug.itemImage || undefined,
+      };
+    });
   },
 
   // [수정 4] 내 약통 추가 (ID 타입: string) - 간단 추가
