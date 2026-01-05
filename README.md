@@ -137,8 +137,7 @@ mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS timetopill CHARACTER SET utf8
 mysql -u root -p timetopill < database/timetopill_dump.sql
 ```
 
-> **덤프 파일 받기**: 덤프 파일은 용량이 커서 git에 포함되지 않습니다.
-> 팀원에게 `timetopill_dump.sql` 파일을 요청하여 `database/` 폴더에 넣으세요.
+> **Note**: `timetopill_dump.sql` 파일을 `database/` 폴더에 넣어주세요. (용량 문제로 git 미포함)
 
 #### 방법 2: SQL 파일 개별 실행 (개발용)
 
