@@ -9,17 +9,19 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RouteProp } from '@react-navigation/native';
+// ✨ [수정됨] 네비게이션 타입 변경
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+// ✨ [추가됨] AppNavigator에서 정의한 스택 파라미터 리스트 import
+import { RootStackParamList } from '../navigation/AppNavigator';
+
 import { Pill, Frequency, TimeSlot, PillScheduleRequest } from '../types';
 import { pillService } from '../services/pillService';
 import { calendarService } from '../services/calendarService';
 import { authService } from '../services/authService';
 
-type Props = {
-  navigation: NativeStackNavigationProp<any>;
-  route: RouteProp<{ params: { pill: Pill } }, 'params'>;
-};
+// ✨ [수정됨] Props 타입 정의 방식 변경 (표준 방식)
+// "나는 RootStackParamList의 'AddPillSchedule' 화면이다"라고 선언
+type Props = NativeStackScreenProps<RootStackParamList, 'AddPillSchedule'>;
 
 const FREQUENCY_OPTIONS: { value: Frequency; label: string; desc: string }[] = [
   { value: 'DAILY', label: '매일', desc: '매일 복용' },
@@ -57,6 +59,7 @@ const formatDisplayDate = (date: Date): string => {
 };
 
 export default function AddPillScheduleScreen({ navigation, route }: Props) {
+  // route.params에서 pill 정보를 가져옵니다.
   const { pill } = route.params;
 
   const [startDate, setStartDate] = useState(new Date());
@@ -130,8 +133,8 @@ export default function AddPillScheduleScreen({ navigation, route }: Props) {
       }
 
       const message = hasGoogleLinked
-        ? `${pill.name}이(가) 등록되고 구글 캘린더에 동기화되었습니다.`
-        : `${pill.name}이(가) 등록되었습니다.`;
+          ? `${pill.name}이(가) 등록되고 구글 캘린더에 동기화되었습니다.`
+          : `${pill.name}이(가) 등록되었습니다.`;
 
       Alert.alert('등록 완료', message, [
         { text: '확인', onPress: () => navigation.navigate('Home') }
@@ -151,180 +154,180 @@ export default function AddPillScheduleScreen({ navigation, route }: Props) {
   };
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#f8fafc" />
+      <View style={styles.container}>
+        <StatusBar barStyle="dark-content" backgroundColor="#f8fafc" />
 
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Text style={styles.backIcon}>←</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>복용 설정</Text>
-        <View style={{ width: 40 }} />
-      </View>
-
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* 약 정보 */}
-        <View style={styles.pillInfo}>
-          <Text style={styles.pillName}>{pill.name}</Text>
-          <Text style={styles.pillDesc}>{pill.description}</Text>
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+            <Text style={styles.backIcon}>←</Text>
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>복용 설정</Text>
+          <View style={{ width: 40 }} />
         </View>
 
-        {/* 시작일 */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>시작일</Text>
-          <View style={styles.dateSelector}>
-            <TouchableOpacity
-              style={styles.dateButton}
-              onPress={() => setStartDate(adjustDate(startDate, -1))}
-            >
-              <Text style={styles.dateButtonText}>-</Text>
-            </TouchableOpacity>
-            <Text style={styles.dateText}>{formatDisplayDate(startDate)}</Text>
-            <TouchableOpacity
-              style={styles.dateButton}
-              onPress={() => setStartDate(adjustDate(startDate, 1))}
-            >
-              <Text style={styles.dateButtonText}>+</Text>
-            </TouchableOpacity>
+        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          {/* 약 정보 */}
+          <View style={styles.pillInfo}>
+            <Text style={styles.pillName}>{pill.name}</Text>
+            <Text style={styles.pillDesc}>{pill.description}</Text>
           </View>
-        </View>
 
-        {/* 종료일 */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>종료일</Text>
-            <TouchableOpacity
-              style={[styles.toggleButton, hasEndDate && styles.toggleButtonActive]}
-              onPress={() => {
-                setHasEndDate(!hasEndDate);
-                if (!hasEndDate && !endDate) {
-                  setEndDate(adjustDate(startDate, 30));
-                }
-              }}
-            >
-              <Text style={[styles.toggleText, hasEndDate && styles.toggleTextActive]}>
-                {hasEndDate ? '설정됨' : '무기한'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-          {hasEndDate && endDate && (
+          {/* 시작일 */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>시작일</Text>
             <View style={styles.dateSelector}>
               <TouchableOpacity
-                style={styles.dateButton}
-                onPress={() => setEndDate(adjustDate(endDate, -1))}
+                  style={styles.dateButton}
+                  onPress={() => setStartDate(adjustDate(startDate, -1))}
               >
                 <Text style={styles.dateButtonText}>-</Text>
               </TouchableOpacity>
-              <Text style={styles.dateText}>{formatDisplayDate(endDate)}</Text>
+              <Text style={styles.dateText}>{formatDisplayDate(startDate)}</Text>
               <TouchableOpacity
-                style={styles.dateButton}
-                onPress={() => setEndDate(adjustDate(endDate, 1))}
+                  style={styles.dateButton}
+                  onPress={() => setStartDate(adjustDate(startDate, 1))}
               >
                 <Text style={styles.dateButtonText}>+</Text>
               </TouchableOpacity>
             </View>
-          )}
-        </View>
+          </View>
 
-        {/* 복용 빈도 */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>복용 빈도</Text>
-          <View style={styles.optionsGrid}>
-            {FREQUENCY_OPTIONS.map((option) => (
+          {/* 종료일 */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>종료일</Text>
               <TouchableOpacity
-                key={option.value}
-                style={[
-                  styles.optionCard,
-                  frequency === option.value && styles.optionCardActive,
-                ]}
-                onPress={() => setFrequency(option.value)}
+                  style={[styles.toggleButton, hasEndDate && styles.toggleButtonActive]}
+                  onPress={() => {
+                    setHasEndDate(!hasEndDate);
+                    if (!hasEndDate && !endDate) {
+                      setEndDate(adjustDate(startDate, 30));
+                    }
+                  }}
               >
-                <Text style={[
-                  styles.optionLabel,
-                  frequency === option.value && styles.optionLabelActive,
-                ]}>
-                  {option.label}
-                </Text>
-                <Text style={[
-                  styles.optionDesc,
-                  frequency === option.value && styles.optionDescActive,
-                ]}>
-                  {option.desc}
+                <Text style={[styles.toggleText, hasEndDate && styles.toggleTextActive]}>
+                  {hasEndDate ? '설정됨' : '무기한'}
                 </Text>
               </TouchableOpacity>
-            ))}
+            </View>
+            {hasEndDate && endDate && (
+                <View style={styles.dateSelector}>
+                  <TouchableOpacity
+                      style={styles.dateButton}
+                      onPress={() => setEndDate(adjustDate(endDate, -1))}
+                  >
+                    <Text style={styles.dateButtonText}>-</Text>
+                  </TouchableOpacity>
+                  <Text style={styles.dateText}>{formatDisplayDate(endDate)}</Text>
+                  <TouchableOpacity
+                      style={styles.dateButton}
+                      onPress={() => setEndDate(adjustDate(endDate, 1))}
+                  >
+                    <Text style={styles.dateButtonText}>+</Text>
+                  </TouchableOpacity>
+                </View>
+            )}
           </View>
-        </View>
 
-        {/* 요일 선택 (CUSTOM일 때만) */}
-        {frequency === 'CUSTOM' && (
+          {/* 복용 빈도 */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>요일 선택</Text>
-            <View style={styles.daysRow}>
-              {DAY_OPTIONS.map((day) => (
-                <TouchableOpacity
-                  key={day.value}
-                  style={[
-                    styles.dayButton,
-                    customDays.includes(day.value) && styles.dayButtonActive,
-                  ]}
-                  onPress={() => toggleDay(day.value)}
-                >
-                  <Text style={[
-                    styles.dayText,
-                    customDays.includes(day.value) && styles.dayTextActive,
-                  ]}>
-                    {day.label}
-                  </Text>
-                </TouchableOpacity>
+            <Text style={styles.sectionTitle}>복용 빈도</Text>
+            <View style={styles.optionsGrid}>
+              {FREQUENCY_OPTIONS.map((option) => (
+                  <TouchableOpacity
+                      key={option.value}
+                      style={[
+                        styles.optionCard,
+                        frequency === option.value && styles.optionCardActive,
+                      ]}
+                      onPress={() => setFrequency(option.value)}
+                  >
+                    <Text style={[
+                      styles.optionLabel,
+                      frequency === option.value && styles.optionLabelActive,
+                    ]}>
+                      {option.label}
+                    </Text>
+                    <Text style={[
+                      styles.optionDesc,
+                      frequency === option.value && styles.optionDescActive,
+                    ]}>
+                      {option.desc}
+                    </Text>
+                  </TouchableOpacity>
               ))}
             </View>
           </View>
-        )}
 
-        {/* 복용 시간 */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>복용 시간</Text>
-          <View style={styles.timeRow}>
-            {TIME_OPTIONS.map((time) => (
-              <TouchableOpacity
-                key={time.value}
-                style={[
-                  styles.timeButton,
-                  timeSlots.includes(time.value) && styles.timeButtonActive,
-                ]}
-                onPress={() => toggleTimeSlot(time.value)}
-              >
-                <Text style={[
-                  styles.timeText,
-                  timeSlots.includes(time.value) && styles.timeTextActive,
-                ]}>
-                  {time.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
-        <View style={{ height: 100 }} />
-      </ScrollView>
-
-      {/* Submit Button */}
-      <View style={styles.footer}>
-        <TouchableOpacity
-          style={[styles.submitButton, loading && styles.submitButtonDisabled]}
-          onPress={handleSubmit}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.submitButtonText}>등록하기</Text>
+          {/* 요일 선택 (CUSTOM일 때만) */}
+          {frequency === 'CUSTOM' && (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>요일 선택</Text>
+                <View style={styles.daysRow}>
+                  {DAY_OPTIONS.map((day) => (
+                      <TouchableOpacity
+                          key={day.value}
+                          style={[
+                            styles.dayButton,
+                            customDays.includes(day.value) && styles.dayButtonActive,
+                          ]}
+                          onPress={() => toggleDay(day.value)}
+                      >
+                        <Text style={[
+                          styles.dayText,
+                          customDays.includes(day.value) && styles.dayTextActive,
+                        ]}>
+                          {day.label}
+                        </Text>
+                      </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
           )}
-        </TouchableOpacity>
+
+          {/* 복용 시간 */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>복용 시간</Text>
+            <View style={styles.timeRow}>
+              {TIME_OPTIONS.map((time) => (
+                  <TouchableOpacity
+                      key={time.value}
+                      style={[
+                        styles.timeButton,
+                        timeSlots.includes(time.value) && styles.timeButtonActive,
+                      ]}
+                      onPress={() => toggleTimeSlot(time.value)}
+                  >
+                    <Text style={[
+                      styles.timeText,
+                      timeSlots.includes(time.value) && styles.timeTextActive,
+                    ]}>
+                      {time.label}
+                    </Text>
+                  </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          <View style={{ height: 100 }} />
+        </ScrollView>
+
+        {/* Submit Button */}
+        <View style={styles.footer}>
+          <TouchableOpacity
+              style={[styles.submitButton, loading && styles.submitButtonDisabled]}
+              onPress={handleSubmit}
+              disabled={loading}
+          >
+            {loading ? (
+                <ActivityIndicator color="#fff" />
+            ) : (
+                <Text style={styles.submitButtonText}>등록하기</Text>
+            )}
+          </TouchableOpacity>
+        </View>
       </View>
-    </View>
   );
 }
 
