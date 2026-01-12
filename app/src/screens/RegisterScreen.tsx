@@ -20,6 +20,11 @@ type Props = {
 
 export default function RegisterScreen({ navigation }: Props) {
   const [step, setStep] = useState(1);
+
+  // ✨ [추가됨] 이름, 이메일 상태
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+
   const [username, setUsername] = useState('');
   const [nickname, setNickname] = useState('');
   const [password, setPassword] = useState('');
@@ -49,8 +54,9 @@ export default function RegisterScreen({ navigation }: Props) {
 
   const handleNext = () => {
     if (step === 1) {
-      if (!username || !nickname) {
-        Alert.alert('알림', '아이디와 닉네임을 입력해주세요.');
+      // ✨ [수정됨] 이름, 이메일 체크 추가
+      if (!name || !email || !username || !nickname) {
+        Alert.alert('알림', '모든 기본 정보를 입력해주세요.');
         return;
       }
       if (!nicknameChecked || !nicknameAvailable) {
@@ -83,227 +89,262 @@ export default function RegisterScreen({ navigation }: Props) {
 
     setLoading(true);
     try {
+      // ✨ [수정됨] name, email 포함하여 전송
       await authService.register({
         username,
-        nickname,
         password,
+        nickname,
+        name,      // 추가됨
+        email,     // 추가됨
         age: parseInt(age, 10),
         gender: gender!,
       });
       Alert.alert('환영합니다', '회원가입이 완료되었습니다.', [
         { text: '로그인하기', onPress: () => navigation.navigate('Login') },
       ]);
-    } catch (error) {
-      Alert.alert('회원가입 실패', '다시 시도해주세요.');
+    } catch (error: any) {
+      // 에러 메시지 상세 표시
+      const message = error.response?.data?.message || '다시 시도해주세요.';
+      Alert.alert('회원가입 실패', message);
     } finally {
       setLoading(false);
     }
   };
 
   const renderStep1 = () => (
-    <>
-      <View style={styles.inputGroup}>
-        <Text style={styles.label}>아이디</Text>
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            placeholder="아이디를 입력하세요"
-            placeholderTextColor="#9ca3af"
-            value={username}
-            onChangeText={setUsername}
-            autoCapitalize="none"
-          />
-        </View>
-      </View>
-
-      <View style={styles.inputGroup}>
-        <Text style={styles.label}>닉네임</Text>
-        <View style={styles.nicknameRow}>
-          <View style={[styles.inputContainer, { flex: 1 }]}>
+      <>
+        {/* ✨ [추가됨] 이름 입력 */}
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>이름</Text>
+          <View style={styles.inputContainer}>
             <TextInput
-              style={styles.input}
-              placeholder="닉네임을 입력하세요"
-              placeholderTextColor="#9ca3af"
-              value={nickname}
-              onChangeText={(text) => {
-                setNickname(text);
-                setNicknameChecked(false);
-                setNicknameAvailable(false);
-              }}
+                style={styles.input}
+                placeholder="실명을 입력하세요"
+                placeholderTextColor="#9ca3af"
+                value={name}
+                onChangeText={setName}
             />
           </View>
-          <TouchableOpacity
-            style={[
-              styles.checkButton,
-              nicknameChecked && nicknameAvailable && styles.checkButtonSuccess,
-            ]}
-            onPress={checkNickname}
-          >
-            <Text style={[
-              styles.checkButtonText,
-              nicknameChecked && nicknameAvailable && styles.checkButtonTextSuccess,
-            ]}>
-              {nicknameChecked && nicknameAvailable ? '확인됨' : '중복확인'}
-            </Text>
-          </TouchableOpacity>
         </View>
-        {nicknameChecked && nicknameAvailable && (
-          <Text style={styles.successText}>사용 가능한 닉네임입니다</Text>
-        )}
-      </View>
-    </>
+
+        {/* ✨ [추가됨] 이메일 입력 */}
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>이메일</Text>
+          <View style={styles.inputContainer}>
+            <TextInput
+                style={styles.input}
+                placeholder="example@email.com"
+                placeholderTextColor="#9ca3af"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+            />
+          </View>
+        </View>
+
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>아이디</Text>
+          <View style={styles.inputContainer}>
+            <TextInput
+                style={styles.input}
+                placeholder="아이디를 입력하세요"
+                placeholderTextColor="#9ca3af"
+                value={username}
+                onChangeText={setUsername}
+                autoCapitalize="none"
+            />
+          </View>
+        </View>
+
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>닉네임</Text>
+          <View style={styles.nicknameRow}>
+            <View style={[styles.inputContainer, { flex: 1 }]}>
+              <TextInput
+                  style={styles.input}
+                  placeholder="닉네임을 입력하세요"
+                  placeholderTextColor="#9ca3af"
+                  value={nickname}
+                  onChangeText={(text) => {
+                    setNickname(text);
+                    setNicknameChecked(false);
+                    setNicknameAvailable(false);
+                  }}
+              />
+            </View>
+            <TouchableOpacity
+                style={[
+                  styles.checkButton,
+                  nicknameChecked && nicknameAvailable && styles.checkButtonSuccess,
+                ]}
+                onPress={checkNickname}
+            >
+              <Text style={[
+                styles.checkButtonText,
+                nicknameChecked && nicknameAvailable && styles.checkButtonTextSuccess,
+              ]}>
+                {nicknameChecked && nicknameAvailable ? '확인됨' : '중복확인'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+          {nicknameChecked && nicknameAvailable && (
+              <Text style={styles.successText}>사용 가능한 닉네임입니다</Text>
+          )}
+        </View>
+      </>
   );
 
   const renderStep2 = () => (
-    <>
-      <View style={styles.inputGroup}>
-        <Text style={styles.label}>나이</Text>
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            placeholder="나이를 입력하세요"
-            placeholderTextColor="#9ca3af"
-            value={age}
-            onChangeText={setAge}
-            keyboardType="numeric"
-          />
+      <>
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>나이</Text>
+          <View style={styles.inputContainer}>
+            <TextInput
+                style={styles.input}
+                placeholder="나이를 입력하세요"
+                placeholderTextColor="#9ca3af"
+                value={age}
+                onChangeText={setAge}
+                keyboardType="numeric"
+            />
+          </View>
         </View>
-      </View>
 
-      <View style={styles.inputGroup}>
-        <Text style={styles.label}>성별</Text>
-        <View style={styles.genderRow}>
-          <TouchableOpacity
-            style={[styles.genderButton, gender === 'M' && styles.genderButtonActive]}
-            onPress={() => setGender('M')}
-          >
-            <Text style={[styles.genderText, gender === 'M' && styles.genderTextActive]}>
-              남성
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.genderButton, gender === 'F' && styles.genderButtonActive]}
-            onPress={() => setGender('F')}
-          >
-            <Text style={[styles.genderText, gender === 'F' && styles.genderTextActive]}>
-              여성
-            </Text>
-          </TouchableOpacity>
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>성별</Text>
+          <View style={styles.genderRow}>
+            <TouchableOpacity
+                style={[styles.genderButton, gender === 'M' && styles.genderButtonActive]}
+                onPress={() => setGender('M')}
+            >
+              <Text style={[styles.genderText, gender === 'M' && styles.genderTextActive]}>
+                남성
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+                style={[styles.genderButton, gender === 'F' && styles.genderButtonActive]}
+                onPress={() => setGender('F')}
+            >
+              <Text style={[styles.genderText, gender === 'F' && styles.genderTextActive]}>
+                여성
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
-    </>
+      </>
   );
 
   const renderStep3 = () => (
-    <>
-      <View style={styles.inputGroup}>
-        <Text style={styles.label}>비밀번호</Text>
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            placeholder="비밀번호를 입력하세요"
-            placeholderTextColor="#9ca3af"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-          />
+      <>
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>비밀번호</Text>
+          <View style={styles.inputContainer}>
+            <TextInput
+                style={styles.input}
+                placeholder="비밀번호를 입력하세요"
+                placeholderTextColor="#9ca3af"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+            />
+          </View>
         </View>
-      </View>
 
-      <View style={styles.inputGroup}>
-        <Text style={styles.label}>비밀번호 확인</Text>
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            placeholder="비밀번호를 다시 입력하세요"
-            placeholderTextColor="#9ca3af"
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-            secureTextEntry
-          />
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>비밀번호 확인</Text>
+          <View style={styles.inputContainer}>
+            <TextInput
+                style={styles.input}
+                placeholder="비밀번호를 다시 입력하세요"
+                placeholderTextColor="#9ca3af"
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                secureTextEntry
+            />
+          </View>
+          {confirmPassword && password !== confirmPassword && (
+              <Text style={styles.errorText}>비밀번호가 일치하지 않습니다</Text>
+          )}
+          {confirmPassword && password === confirmPassword && (
+              <Text style={styles.successText}>비밀번호가 일치합니다</Text>
+          )}
         </View>
-        {confirmPassword && password !== confirmPassword && (
-          <Text style={styles.errorText}>비밀번호가 일치하지 않습니다</Text>
-        )}
-        {confirmPassword && password === confirmPassword && (
-          <Text style={styles.successText}>비밀번호가 일치합니다</Text>
-        )}
-      </View>
-    </>
+      </>
   );
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#f8fafc" />
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
-        <ScrollView
-          style={styles.scrollView}
-          showsVerticalScrollIndicator={false}
+      <View style={styles.container}>
+        <StatusBar barStyle="dark-content" backgroundColor="#f8fafc" />
+        <KeyboardAvoidingView
+            style={{ flex: 1 }}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
-          {/* Header */}
-          <View style={styles.header}>
-            <TouchableOpacity
-              style={styles.backButton}
-              onPress={() => step > 1 ? setStep(step - 1) : navigation.goBack()}
-            >
-              <Text style={styles.backIcon}>←</Text>
-            </TouchableOpacity>
-            <Text style={styles.title}>회원가입</Text>
-            <View style={{ width: 40 }} />
-          </View>
+          <ScrollView
+              style={styles.scrollView}
+              showsVerticalScrollIndicator={false}
+          >
+            {/* Header */}
+            <View style={styles.header}>
+              <TouchableOpacity
+                  style={styles.backButton}
+                  onPress={() => step > 1 ? setStep(step - 1) : navigation.goBack()}
+              >
+                <Text style={styles.backIcon}>←</Text>
+              </TouchableOpacity>
+              <Text style={styles.title}>회원가입</Text>
+              <View style={{ width: 40 }} />
+            </View>
 
-          {/* Progress */}
-          <View style={styles.progressContainer}>
-            {[1, 2, 3].map((s) => (
-              <View key={s} style={styles.progressItem}>
-                <View style={[styles.progressDot, s <= step && styles.progressDotActive]}>
-                  {s < step ? (
-                    <Text style={styles.progressCheck}>✓</Text>
-                  ) : (
-                    <Text style={[styles.progressNumber, s <= step && styles.progressNumberActive]}>
-                      {s}
+            {/* Progress */}
+            <View style={styles.progressContainer}>
+              {[1, 2, 3].map((s) => (
+                  <View key={s} style={styles.progressItem}>
+                    <View style={[styles.progressDot, s <= step && styles.progressDotActive]}>
+                      {s < step ? (
+                          <Text style={styles.progressCheck}>✓</Text>
+                      ) : (
+                          <Text style={[styles.progressNumber, s <= step && styles.progressNumberActive]}>
+                            {s}
+                          </Text>
+                      )}
+                    </View>
+                    <Text style={[styles.progressLabel, s <= step && styles.progressLabelActive]}>
+                      {s === 1 ? '기본정보' : s === 2 ? '추가정보' : '비밀번호'}
                     </Text>
-                  )}
-                </View>
-                <Text style={[styles.progressLabel, s <= step && styles.progressLabelActive]}>
-                  {s === 1 ? '기본정보' : s === 2 ? '추가정보' : '비밀번호'}
-                </Text>
-                {s < 3 && <View style={[styles.progressLine, s < step && styles.progressLineActive]} />}
-              </View>
-            ))}
-          </View>
+                    {s < 3 && <View style={[styles.progressLine, s < step && styles.progressLineActive]} />}
+                  </View>
+              ))}
+            </View>
 
-          {/* Form */}
-          <View style={styles.form}>
-            {step === 1 && renderStep1()}
-            {step === 2 && renderStep2()}
-            {step === 3 && renderStep3()}
-          </View>
-        </ScrollView>
+            {/* Form */}
+            <View style={styles.form}>
+              {step === 1 && renderStep1()}
+              {step === 2 && renderStep2()}
+              {step === 3 && renderStep3()}
+            </View>
+          </ScrollView>
 
-        {/* Bottom Button */}
-        <View style={styles.bottomContainer}>
-          {step < 3 ? (
-            <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
-              <Text style={styles.nextButtonText}>다음</Text>
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity
-              style={[styles.nextButton, loading && styles.buttonDisabled]}
-              onPress={handleRegister}
-              disabled={loading}
-            >
-              <Text style={styles.nextButtonText}>
-                {loading ? '가입 중...' : '가입 완료'}
-              </Text>
-            </TouchableOpacity>
-          )}
-        </View>
-      </KeyboardAvoidingView>
-    </View>
+          {/* Bottom Button */}
+          <View style={styles.bottomContainer}>
+            {step < 3 ? (
+                <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
+                  <Text style={styles.nextButtonText}>다음</Text>
+                </TouchableOpacity>
+            ) : (
+                <TouchableOpacity
+                    style={[styles.nextButton, loading && styles.buttonDisabled]}
+                    onPress={handleRegister}
+                    disabled={loading}
+                >
+                  <Text style={styles.nextButtonText}>
+                    {loading ? '가입 중...' : '가입 완료'}
+                  </Text>
+                </TouchableOpacity>
+            )}
+          </View>
+        </KeyboardAvoidingView>
+      </View>
   );
 }
 

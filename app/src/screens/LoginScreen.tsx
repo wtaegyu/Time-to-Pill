@@ -46,12 +46,11 @@ export default function LoginScreen({ navigation }: Props) {
 
         try {
           const res = await authService.googleLogin(
-            data.user.email || '',
-            data.user.name || '',
-            data.user.id
+              data.user.email || '',
+              data.user.name || '',
+              data.user.id
           );
 
-          // 프로필이 완성되지 않았으면 CompleteProfile 화면으로
           if (!res.isProfileComplete) {
             navigation.replace('CompleteProfile');
           } else {
@@ -64,7 +63,7 @@ export default function LoginScreen({ navigation }: Props) {
     } catch (error: any) {
       if (isErrorWithCode(error)) {
         if (error.code === statusCodes.SIGN_IN_CANCELLED) {
-          // 사용자가 취소함 - 아무것도 하지 않음
+          // 취소됨
         } else if (error.code === statusCodes.IN_PROGRESS) {
           Alert.alert('알림', '로그인 진행 중입니다.');
         } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
@@ -96,91 +95,101 @@ export default function LoginScreen({ navigation }: Props) {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <StatusBar barStyle="dark-content" backgroundColor="#f8fafc" />
-      <View style={styles.content}>
-        {/* Logo Section */}
-        <View style={styles.logoSection}>
-          <View style={styles.logoCircle}>
-            <Text style={styles.logoText}>P</Text>
-          </View>
-          <Text style={styles.title}>Time To Pill</Text>
-          <Text style={styles.subtitle}>당신의 건강한 복약 습관</Text>
-        </View>
-
-        {/* Form Section */}
-        <View style={styles.form}>
-          <Text style={styles.inputLabel}>아이디</Text>
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.input}
-              placeholder="아이디를 입력하세요"
-              placeholderTextColor="#9ca3af"
-              value={username}
-              onChangeText={setUsername}
-              autoCapitalize="none"
-            />
+      <KeyboardAvoidingView
+          style={styles.container}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <StatusBar barStyle="dark-content" backgroundColor="#f8fafc" />
+        <View style={styles.content}>
+          {/* Logo Section */}
+          <View style={styles.logoSection}>
+            <View style={styles.logoCircle}>
+              <Text style={styles.logoText}>P</Text>
+            </View>
+            <Text style={styles.title}>Time To Pill</Text>
+            <Text style={styles.subtitle}>당신의 건강한 복약 습관</Text>
           </View>
 
-          <Text style={styles.inputLabel}>비밀번호</Text>
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.input}
-              placeholder="비밀번호를 입력하세요"
-              placeholderTextColor="#9ca3af"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={!showPassword}
-            />
+          {/* Form Section */}
+          <View style={styles.form}>
+            <Text style={styles.inputLabel}>아이디</Text>
+            <View style={styles.inputContainer}>
+              <TextInput
+                  style={styles.input}
+                  placeholder="아이디를 입력하세요"
+                  placeholderTextColor="#9ca3af"
+                  value={username}
+                  onChangeText={setUsername}
+                  autoCapitalize="none"
+              />
+            </View>
+
+            <Text style={styles.inputLabel}>비밀번호</Text>
+            <View style={styles.inputContainer}>
+              <TextInput
+                  style={styles.input}
+                  placeholder="비밀번호를 입력하세요"
+                  placeholderTextColor="#9ca3af"
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry={!showPassword}
+              />
+              <TouchableOpacity
+                  onPress={() => setShowPassword(!showPassword)}
+                  style={styles.eyeButton}
+              >
+                <Text style={styles.eyeText}>{showPassword ? '숨김' : '표시'}</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* 로그인 버튼 */}
             <TouchableOpacity
-              onPress={() => setShowPassword(!showPassword)}
-              style={styles.eyeButton}
+                style={[styles.loginButton, loading && styles.buttonDisabled]}
+                onPress={handleLogin}
+                disabled={loading}
             >
-              <Text style={styles.eyeText}>{showPassword ? '숨김' : '표시'}</Text>
+              <Text style={styles.loginButtonText}>
+                {loading ? '로그인 중...' : '로그인'}
+              </Text>
             </TouchableOpacity>
+
+            {/* ✨ [수정됨] 링크 모음 (한 줄 배치) ✨ */}
+            <View style={styles.linksContainer}>
+              {/* 1. 아이디/비번 찾기 */}
+              <TouchableOpacity onPress={() => navigation.navigate('FindAccount')}>
+                <Text style={styles.linkText}>아이디 / 비밀번호 찾기</Text>
+              </TouchableOpacity>
+
+              {/* 2. 구분선 */}
+              <Text style={styles.separator}>|</Text>
+
+              {/* 3. 회원가입 */}
+              <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+                <Text style={styles.linkText}>
+                  계정이 없으신가요? <Text style={styles.linkBold}>회원가입</Text>
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
-          <TouchableOpacity
-            style={[styles.loginButton, loading && styles.buttonDisabled]}
-            onPress={handleLogin}
-            disabled={loading}
-          >
-            <Text style={styles.loginButtonText}>
-              {loading ? '로그인 중...' : '로그인'}
-            </Text>
-          </TouchableOpacity>
+          {/* Divider */}
+          <View style={styles.divider}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>또는</Text>
+            <View style={styles.dividerLine} />
+          </View>
 
+          {/* Social Login */}
           <TouchableOpacity
-            style={styles.registerLink}
-            onPress={() => navigation.navigate('Register')}
+              style={styles.googleButton}
+              onPress={handleGoogleSignIn}
+              disabled={loading}
           >
-            <Text style={styles.registerLinkText}>
-              계정이 없으신가요? <Text style={styles.registerLinkBold}>회원가입</Text>
-            </Text>
+            <Text style={styles.googleIcon}>G</Text>
+            <Text style={styles.googleButtonText}>Google로 계속하기</Text>
           </TouchableOpacity>
         </View>
-
-        {/* Divider */}
-        <View style={styles.divider}>
-          <View style={styles.dividerLine} />
-          <Text style={styles.dividerText}>또는</Text>
-          <View style={styles.dividerLine} />
-        </View>
-
-        {/* Social Login */}
-        <TouchableOpacity
-          style={styles.googleButton}
-          onPress={handleGoogleSignIn}
-          disabled={loading}
-        >
-          <Text style={styles.googleIcon}>G</Text>
-          <Text style={styles.googleButtonText}>Google로 계속하기</Text>
-        </TouchableOpacity>
-      </View>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
   );
 }
 
@@ -243,6 +252,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     borderWidth: 1,
     borderColor: '#e2e8f0',
+    fontSize: 15,
   },
   input: {
     flex: 1,
@@ -273,18 +283,28 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-  registerLink: {
-    alignItems: 'center',
-    marginTop: 20,
+
+  // ✨ [새로 정의된 스타일] ✨
+  linksContainer: {
+    flexDirection: 'row',       // 가로 정렬
+    alignItems: 'center',       // 세로 가운데 정렬
+    justifyContent: 'center',   // 가로 가운데 정렬
+    marginTop: 24,
   },
-  registerLinkText: {
+  linkText: {
     color: '#64748b',
-    fontSize: 14,
+    fontSize: 13, // 한 줄에 잘 들어가도록 크기 조절
   },
-  registerLinkBold: {
+  linkBold: {
     color: '#1e293b',
     fontWeight: '600',
   },
+  separator: {
+    color: '#cbd5e1', // 연한 회색
+    marginHorizontal: 12, // 양옆 간격
+    fontSize: 12,
+  },
+
   divider: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -14,3 +14,4 @@ export { default as AddPillScheduleScreen } from './AddPillScheduleScreen';
 export { default as EditProfileScreen } from './EditProfileScreen';
 export { default as CompleteProfileScreen } from './CompleteProfileScreen';
 export { default as PillDetailScreen } from './PillDetailScreen';
+export { default as FindAccountScreen } from './FindAccountScreen';

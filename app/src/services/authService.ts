@@ -1,5 +1,6 @@
 import api from './api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+// RegisterRequest는 types.ts에 name, email이 없더라도 아래 register 함수에서 확장해서 처리하도록 합니다.
 import { LoginRequest, RegisterRequest, AuthResponse, User, GoogleLinkRequest } from '../types';
 
 export const authService = {
@@ -10,7 +11,9 @@ export const authService = {
     return response.data;
   },
 
-  async register(data: RegisterRequest): Promise<AuthResponse> {
+  // ✨ [수정됨] RegisterRequest 타입에 name과 email을 강제로 포함시킵니다.
+  // 이렇게 하면 types.ts를 수정하지 않아도 RegisterScreen에서 에러가 사라집니다.
+  async register(data: RegisterRequest & { name: string; email: string }): Promise<AuthResponse> {
     const response = await api.post<AuthResponse>('/auth/register', data);
     return response.data;
   },
@@ -37,7 +40,6 @@ export const authService = {
 
   async updateProfile(data: { nickname?: string; age?: number; gender?: string }): Promise<User> {
     const response = await api.put<User>('/auth/profile', data);
-    // 로컬 스토리지의 user 정보도 업데이트
     await AsyncStorage.setItem('user', JSON.stringify(response.data));
     return response.data;
   },
@@ -75,4 +77,16 @@ export const authService = {
     await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
     return response.data;
   },
+
+  // ✨ [아이디 찾기] 기존 코드를 메서드 형태로 통일
+  async findId(name: string, email: string) {
+    const response = await api.post('/auth/find-id', { name, email });
+    return response.data;
+  },
+
+  // ✨ [비밀번호 찾기] 기존 코드를 메서드 형태로 통일
+  async findPassword(username: string, name: string, email: string) {
+    const response = await api.post('/auth/reset-password', { username, name, email });
+    return response.data;
+  }
 };
